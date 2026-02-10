@@ -43,7 +43,7 @@ features:
 ```bash
 # Disable LLM classification
 export ENABLE_LLM_CLASSIFICATION=false
-stats-solver init
+skills-applier init
 ```
 
 ### `enable_auto_metadata`
@@ -68,7 +68,7 @@ stats-solver init
 ```bash
 # Disable auto metadata generation
 export ENABLE_AUTO_METADATA=false
-stats-solver init
+skills-applier init
 ```
 
 ### `enable_code_generation`
@@ -83,7 +83,7 @@ stats-solver init
 - Reducing resource usage
 
 **Impact when disabled:**
-- `stats-solver solve` will only show recommendations
+- `skills-applier solve` will only show recommendations
 - No Python code will be generated
 - Skill descriptions and metadata will still be shown
 
@@ -93,7 +93,7 @@ stats-solver init
 ```bash
 # Disable code generation
 export ENABLE_CODE_GENERATION=false
-stats-solver solve "analyze my data"
+skills-applier solve "analyze my data"
 # Output: Recommendations only, no code
 ```
 
@@ -119,7 +119,7 @@ stats-solver solve "analyze my data"
 ```bash
 # Disable visualization
 export ENABLE_VISUALIZATION=false
-stats-solver solve "analyze my data"
+skills-applier solve "analyze my data"
 # Output: Statistical analysis only, no visualization code
 ```
 
@@ -161,7 +161,7 @@ Note: Command-line flag support is planned for future versions:
 
 ```bash
 # Planned feature
-stats-solver solve --no-code-generation "analyze my data"
+skills-applier solve --no-code-generation "analyze my data"
 ```
 
 ## Common Configurations
@@ -222,7 +222,7 @@ features:
 You can check which features are enabled by running:
 
 ```bash
-stats-solver config list
+skills-applier config list
 ```
 
 This will show all configuration values, including feature flags.
@@ -245,7 +245,7 @@ If a dependent feature is disabled, the parent feature may not work as expected.
 
 If a feature doesn't seem to be working:
 
-1. Check the configuration: `stats-solver config list`
+1. Check the configuration: `skills-applier config list`
 2. Verify the feature flag is set correctly
 3. Check logs for error messages
 4. Ensure dependencies are met

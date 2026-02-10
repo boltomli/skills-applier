@@ -14,7 +14,7 @@ from ..llm.manager import LLMManager
 logger = logging.getLogger(__name__)
 console = Console()
 app = typer.Typer(
-    name="stats-solver",
+    name="skills-applier",
     help="Intelligent statistics method recommendation system powered by local LLM",
     add_completion=False,
 )
@@ -28,20 +28,29 @@ def main(
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose logging"),
     debug: bool = typer.Option(False, "--debug", help="Enable debug logging"),
 ):
-    """Stats Solver - Intelligent statistics method recommendation."""
+    """Skills Applier - Intelligent statistics method recommendation."""
     # Setup logging
     log_level = "DEBUG" if debug else "INFO" if verbose else "WARNING"
     setup_logging(log_level)
 
-    logger.debug("Stats solver initialized")
+    logger.debug("Skills applier initialized")
 
 
 @app.command()
-def analyze(
-    problem: str = typer.Argument(..., help="Problem description to analyze"),
-    output: Optional[str] = typer.Option(None, "--output", "-o", help="Output file path"),
+def solve(
+    problem: str = typer.Argument(None, help="Problem description to analyze"),
+    method: str = typer.Option(
+        "auto", "--method", "-m", help="Method to use (auto, template, llm)"
+    ),
+    output: str = typer.Option(
+        "markdown", "--output", "-o", help="Output format (markdown, json, code)"
+    ),
 ):
-    """Analyze a problem and recommend statistical methods."""
+    """Get recommendations and generate solutions."""
+    if problem is None:
+        console.print("[bold cyan]Describe your data problem:[/bold cyan] ", end="")
+        problem = input()
+
     console.print(f"[bold cyan]Analyzing problem:[/bold cyan] {problem}")
 
     # This will be implemented with full integration
@@ -101,36 +110,81 @@ def status():
     table.add_row("Code Generator", "Ready", "Available")
 
     console.print(table)
-    console.print("\n[dim]Use 'stats-solver init' to initialize the system.[/dim]")
+    console.print("\n[dim]Use 'skills-applier init' to initialize the system.[/dim]")
+
+
+@app.command()
+def check():
+    """Check LLM connection and system status."""
+    import asyncio
+
+    console.print("[bold cyan]Checking LLM connection...[/bold cyan]")
+    console.print("[dim]Run 'skills-applier init' first if not initialized.[/dim]\n")
+
+    async def _check():
+        global llm_manager
+        if llm_manager is None:
+            try:
+                llm_manager = LLMManager.from_env()
+                initialized = await llm_manager.initialize()
+            except Exception as e:
+                console.print(f"[red]✗[/red] Failed to initialize LLM manager: {e}")
+                return
+
+        if llm_manager:
+            try:
+                health = await llm_manager.health_check()
+
+                if health["available"]:
+                    console.print(f"[green]✓[/green] LLM is available")
+                    console.print(f"  Provider: {health['provider']}")
+                    console.print(f"  Model: {health['model']}")
+                    console.print(f"  Available models: {health['models_count']}")
+                else:
+                    console.print(
+                        f"[red]✗[/red] LLM not available: {health.get('error', 'Unknown error')}"
+                    )
+            except Exception as e:
+                console.print(f"[red]✗[/red] Health check failed: {e}")
+        else:
+            console.print("[yellow]![/yellow] LLM manager not initialized")
+
+    asyncio.run(_check())
 
 
 @app.command()
 def init():
     """Initialize the system (scan skills, connect to LLM)."""
-    console.print("[bold cyan]Initializing Stats Solver...[/bold cyan]\n")
+    import asyncio
 
-    # Initialize LLM manager
-    global llm_manager
-    try:
-        llm_manager = LLMManager.from_env()
-        initialized = await llm_manager.initialize()
+    console.print("[bold cyan]Initializing Skills Applier...[/bold cyan]\n")
 
-        if initialized:
-            console.print("[green]✓[/green] LLM manager initialized")
-            health = await llm_manager.health_check()
+    async def _init():
+        # Initialize LLM manager
+        global llm_manager
+        try:
+            llm_manager = LLMManager.from_env()
+            initialized = await llm_manager.initialize()
 
-            if health["available"]:
-                console.print(f"[green]✓[/green] Connected to {health['provider']}")
-                console.print(f"  Model: {health['model']}")
-                console.print(f"  Available models: {health['models_count']}")
+            if initialized:
+                console.print("[green]✓[/green] LLM manager initialized")
+                health = await llm_manager.health_check()
+
+                if health["available"]:
+                    console.print(f"[green]✓[/green] Connected to {health['provider']}")
+                    console.print(f"  Model: {health['model']}")
+                    console.print(f"  Available models: {health['models_count']}")
+                else:
+                    console.print(
+                        f"[yellow]![/yellow] LLM not available: {health.get('error', 'Unknown error')}"
+                    )
             else:
-                console.print(
-                    f"[yellow]![/yellow] LLM not available: {health.get('error', 'Unknown error')}"
-                )
-        else:
-            console.print("[red]✗[/red] Failed to initialize LLM manager")
-    except Exception as e:
-        console.print(f"[red]✗[/red] LLM initialization error: {e}")
+                console.print("[red]✗[/red] Failed to initialize LLM manager")
+        except Exception as e:
+            console.print(f"[red]✗[/red] LLM initialization error: {e}")
+
+    # Run async initialization
+    asyncio.run(_init())
 
     # Scan skills
     console.print("\n[cyan]Scanning skills...[/cyan]")
@@ -142,25 +196,43 @@ def init():
 
 @app.command()
 def skills(
+    action: str = typer.Argument("list", help="Action: list, search, show"),
     category: Optional[str] = typer.Option(None, "--category", "-c", help="Filter by category"),
-    search: Optional[str] = typer.Option(None, "--search", "-s", help="Search term"),
-    limit: int = typer.Option(10, "--limit", "-l", help="Maximum results"),
+    tag: Optional[str] = typer.Option(None, "--tag", "-t", help="Filter by tag"),
+    data_type: Optional[str] = typer.Option(None, "--data-type", "-d", help="Filter by data type"),
 ):
-    """Browse available skills."""
-    console.print("[bold cyan]Available Skills[/bold cyan]\n")
-
-    # This will be implemented with full integration
-    console.print("[yellow]Skill browser coming soon![/yellow]")
-    console.print("This will display and filter available statistical and mathematical skills.")
+    """Manage and browse skills."""
+    if action == "list":
+        console.print("[bold cyan]Available Skills[/bold cyan]\n")
+        if category:
+            console.print(f"[dim]Category: {category}[/dim]\n")
+        # This will be implemented with full integration
+        console.print("[yellow]Skill browser coming soon![/yellow]")
+        console.print("This will display and filter available statistical and mathematical skills.")
+    elif action == "search":
+        console.print("[bold cyan]Search Skills[/bold cyan]\n")
+        if tag:
+            console.print(f"[dim]Tag: {tag}[/dim]\n")
+        if data_type:
+            console.print(f"[dim]Data Type: {data_type}[/dim]\n")
+        # This will be implemented with full integration
+        console.print("[yellow]Skill search coming soon![/yellow]")
+    elif action == "show":
+        console.print("[bold cyan]Show Skill Details[/bold cyan]\n")
+        console.print("[yellow]Skill details coming soon![/yellow]")
+    else:
+        console.print(f"[red]Unknown action: {action}[/red]")
+        console.print("Use: skills-applier skills [list|search|show] [options]")
 
 
 @app.command()
 def config(
-    list_: bool = typer.Option(False, "--list", "-l", help="List configuration"),
-    set_: Optional[str] = typer.Option(None, "--set", "-s", help="Set configuration (KEY=VALUE)"),
+    action: str = typer.Argument("list", help="Action: list, get, set, validate"),
+    key: Optional[str] = typer.Argument(None, help="Configuration key"),
+    value: Optional[str] = typer.Argument(None, help="Configuration value"),
 ):
     """Manage configuration."""
-    if list_ or (not set_):
+    if action == "list" or action == "get" and key is None:
         # List configuration
         console.print("[bold cyan]Current Configuration[/bold cyan]\n")
 
@@ -176,10 +248,17 @@ def config(
         table.add_row("LOG_LEVEL", "INFO", "Logging level")
 
         console.print(table)
-    else:
-        # Set configuration
-        console.print(f"[yellow]Setting configuration:[/yellow] {set_}")
+    elif action == "get" and key:
+        console.print(f"[bold cyan]{key}:[/bold cyan] (Configuration retrieval coming soon)")
+    elif action == "set" and key and value:
+        console.print(f"[yellow]Setting {key} = {value}[/yellow]")
         console.print("[yellow]Configuration update coming soon![/yellow]")
+    elif action == "validate":
+        console.print("[bold cyan]Validating configuration...[/bold cyan]")
+        console.print("[yellow]Configuration validation coming soon![/yellow]")
+    else:
+        console.print(f"[red]Unknown or incomplete action: {action}[/red]")
+        console.print("Use: skills-applier config [list|get|set|validate] [key] [value]")
 
 
 if __name__ == "__main__":

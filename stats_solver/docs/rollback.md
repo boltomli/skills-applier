@@ -60,7 +60,7 @@ pip install -e .
 3. Verify the state:
    ```bash
    git status
-   stats-solver --version
+   skills-applier --version
    ```
 
 4. Reinstall:
@@ -70,8 +70,8 @@ pip install -e .
 
 5. Test functionality:
    ```bash
-   stats-solver check
-   stats-solver skills list
+   skills-applier check
+   skills-applier skills list
    ```
 
 ### Scenario 2: Create a Rollback Branch
@@ -98,7 +98,7 @@ pip install -e .
 4. Test the rollback:
    ```bash
    pip install -e .
-   stats-solver check
+   skills-applier check
    ```
 
 ### Scenario 3: Revert Specific Changes
@@ -149,7 +149,7 @@ pip install -e .
 
 4. Restart the application:
    ```bash
-   stats-solver check
+   skills-applier check
    ```
 
 ### Scenario 2: Rollback Environment Variables
@@ -199,7 +199,7 @@ pip install -e .
 
 3. Regenerate metadata:
    ```bash
-   stats-solver init --force
+   skills-applier init
    ```
 
 ## Feature Rollback
@@ -253,7 +253,7 @@ pip install -e .
 
 4. Test rollback:
    ```bash
-   stats-solver check
+   skills-applier check
    ```
 
 ## Complete System Rollback
@@ -266,13 +266,13 @@ pip install -e .
 
 1. Uninstall current version:
    ```bash
-   pip uninstall stats-solver
+   pip uninstall skills-applier
    ```
 
 2. Clone fresh repository:
    ```bash
-   git clone <repository-url> stats-solver-fresh
-   cd stats-solver-fresh
+   git clone https://github.com/boltomli/skills-applier
+   cd skills-applier
    ```
 
 3. Checkout stable version:
@@ -287,18 +287,17 @@ pip install -e .
 
 5. Configure:
    ```bash
-   cp .env.example .env
-   # Edit .env as needed
+   # Edit config/default.yaml as needed
    ```
 
 6. Initialize:
    ```bash
-   stats-solver init
+   skills-applier init
    ```
 
 7. Test:
    ```bash
-   stats-solver check
+   skills-applier check
    ```
 
 ### Scenario 2: Restore from Backup
@@ -335,7 +334,7 @@ pip install -e .
 After performing any rollback, verify the following:
 
 - [ ] Application starts without errors
-- [ ] `stats-solver check` passes
+- [ ] `skills-applier check` passes
 - [ ] Skills are properly indexed
 - [ ] LLM connection works (if applicable)
 - [ ] Basic commands work (`solve`, `skills list`, etc.)
@@ -353,7 +352,7 @@ Create a test script to verify rollback:
 echo "Testing rollback..."
 
 # Test 1: Check application
-if stats-solver check; then
+if skills-applier check; then
     echo "✓ Application check passed"
 else
     echo "✗ Application check failed"
@@ -361,7 +360,7 @@ else
 fi
 
 # Test 2: List skills
-if stats-solver skills list > /dev/null 2>&1; then
+if skills-applier skills list > /dev/null 2>&1; then
     echo "✓ Skills list passed"
 else
     echo "✗ Skills list failed"
@@ -369,7 +368,7 @@ else
 fi
 
 # Test 3: Test recommendation
-echo "test" | stats-solver solve > /dev/null 2>&1
+echo "test" | skills-applier solve > /dev/null 2>&1
 if [ $? -eq 0 ]; then
     echo "✓ Recommendation test passed"
 else
@@ -413,7 +412,7 @@ If the system is completely unresponsive:
 
 1. Stop any running processes:
    ```bash
-   pkill -f stats-solver
+   pkill -f skills-applier
    ```
 
 2. Rollback to known good state:

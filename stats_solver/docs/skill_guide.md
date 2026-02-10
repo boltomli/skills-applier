@@ -362,7 +362,7 @@ Or add to your custom skill paths configured in `config/default.yaml`.
 Run the initialization command to update the skill index:
 
 ```bash
-stats-solver init --force
+skills-applier init
 ```
 
 ### Step 5: Verify the Skill
@@ -370,13 +370,13 @@ stats-solver init --force
 Check that the skill is recognized:
 
 ```bash
-stats-solver skills show t-test-two-sample
+skills-applier skills show t-test-two-sample
 ```
 
 Or search for it:
 
 ```bash
-stats-solver skills search --tag hypothesis_testing
+skills-applier skills search --tag hypothesis_testing
 ```
 
 ## Testing Skills
@@ -603,13 +603,13 @@ def histogram_analysis(data: np.ndarray,
 
 ### Skill Not Recognized
 
-**Problem**: Skill doesn't appear after running `stats-solver init`
+**Problem**: Skill doesn't appear after running `skills-applier init`
 
 **Solutions**:
 1. Verify metadata file exists and has valid JSON
 2. Check file names match (skill.py and skill.json)
 3. Ensure files are in a configured skill path
-4. Run with `--force` flag to rescan
+4. Run `skills-applier init` again to rescan
 
 ### Metadata Validation Errors
 

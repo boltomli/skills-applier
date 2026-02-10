@@ -1,3 +1,5 @@
 .iflow/
 openspec/
 *.egg-info/
+*.log
+__pycache__/

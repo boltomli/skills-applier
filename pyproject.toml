@@ -36,6 +36,7 @@ dependencies = [
     "numpy>=1.24.0",
     "scipy>=1.10.0",
     "matplotlib>=3.7.0",
+    "python-dotenv>=1.0.0",
 ]
 
 [project.optional-dependencies]
@@ -59,7 +60,7 @@ Repository = "https://github.com/boltomli/skills-applier"
 Issues = "https://github.com/boltomli/skills-applier/issues"
 
 [project.scripts]
-stats-solver = "stats_solver.cli.main:app"
+skills-applier = "stats_solver.cli.main:app"
 
 [tool.uv]
 package = true

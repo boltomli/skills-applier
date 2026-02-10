@@ -78,7 +78,7 @@ pip install httpx pydantic typer rich pyyaml jinja2 numpy scipy matplotlib
 ### 1. Initialize the System
 
 ```bash
-stats-solver init
+skills-applier init
 ```
 
 This will scan your skill directories and build the index.
@@ -86,26 +86,26 @@ This will scan your skill directories and build the index.
 ### 2. Check LLM Connection
 
 ```bash
-stats-solver check
+skills-applier check
 ```
 
 ### 3. Get Recommendations
 
 Interactive mode:
 ```bash
-stats-solver solve
+skills-applier solve
 ```
 
 Direct mode:
 ```bash
-stats-solver solve "I have test scores from two classes and want to know if there's a significant difference"
+skills-applier solve "I have test scores from two classes and want to know if there's a significant difference"
 ```
 
 ### 4. Browse Available Skills
 
 ```bash
-stats-solver skills list
-stats-solver skills search --tag hypothesis_test
+skills-applier skills list
+skills-applier skills search --tag hypothesis_test
 ```
 
 ## Usage
@@ -115,7 +115,7 @@ stats-solver skills search --tag hypothesis_test
 The interactive mode guides you through your problem:
 
 ```bash
-$ stats-solver solve
+$ skills-applier solve
 Describe your data problem: I have customer ratings and want to analyze their distribution
 
 Analyzing your problem...
@@ -130,25 +130,25 @@ Generate solution? [y/n]: y
 
 ### Command Reference
 
-#### `stats-solver init`
+#### `skills-applier init`
 Initialize the system and scan skills.
 
 ```bash
-stats-solver init [--force]
+skills-applier init
 ```
 
-#### `stats-solver check`
+#### `skills-applier check`
 Check LLM connection and system status.
 
 ```bash
-stats-solver check
+skills-applier check
 ```
 
-#### `stats-solver solve`
+#### `skills-applier solve`
 Get recommendations and generate solutions.
 
 ```bash
-stats-solver solve [PROBLEM] [--method METHOD] [--output OUTPUT]
+skills-applier solve [PROBLEM] [--method METHOD] [--output OUTPUT]
 ```
 
 Options:
@@ -156,22 +156,22 @@ Options:
 - `--method`: Method to use (auto, template, llm)
 - `--output`: Output format (markdown, json, code)
 
-#### `stats-solver skills`
+#### `skills-applier skills`
 Manage and browse skills.
 
 ```bash
-stats-solver skills list [--category CATEGORY]
-stats-solver skills search --tag TAG [--data-type TYPE]
-stats-solver skills show SKILL_ID
+skills-applier skills list [--category CATEGORY]
+skills-applier skills search --tag TAG [--data-type TYPE]
+skills-applier skills show SKILL_ID
 ```
 
-#### `stats-solver config`
+#### `skills-applier config`
 Manage configuration.
 
 ```bash
-stats-solver config set KEY VALUE
-stats-solver config get KEY
-stats-solver config list
+skills-applier config set KEY VALUE
+skills-applier config get KEY
+skills-applier config list
 ```
 
 ## Project Structure
@@ -251,7 +251,7 @@ skills:
 ### Example 1: Hypothesis Testing
 
 ```bash
-$ stats-solver solve "Compare test scores between two classes"
+$ skills-applier solve "Compare test scores between two classes"
 
 Problem: Hypothesis Test
 Recommended: Two-Sample T-Test
@@ -268,7 +268,7 @@ def two_sample_ttest(sample1, sample2):
 ### Example 2: Regression Analysis
 
 ```bash
-$ stats-solver solve "Predict sales based on advertising spend"
+$ skills-applier solve "Predict sales based on advertising spend"
 
 Problem: Regression
 Recommended: Linear Regression
@@ -285,7 +285,7 @@ def linear_regression(X, y):
 ### Example 3: Data Visualization
 
 ```bash
-$ stats-solver solve "Visualize the distribution of my data"
+$ skills-applier solve "Visualize the distribution of my data"
 
 Problem: Visualization
 Recommended: Histogram Visualization
@@ -334,8 +334,8 @@ To add new skills:
 
 1. Create skill file in appropriate directory
 2. Add metadata following the schema
-3. Run `stats-solver init` to re-index
-4. Test with `stats-solver skills show SKILL_ID`
+3. Run `skills-applier init` to re-index
+4. Test with `skills-applier skills show SKILL_ID`
 
 ## License
 

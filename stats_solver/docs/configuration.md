@@ -395,20 +395,20 @@ solver = StatsSolver(
 Validate your configuration:
 
 ```bash
-stats-solver config validate
+skills-applier config validate
 ```
 
 ### Viewing Current Configuration
 
 ```bash
-stats-solver config list
+skills-applier config list
 ```
 
 ### Setting Configuration Values
 
 ```bash
-stats-solver config set llm.model mistral
-stats-solver config set app.log_level DEBUG
+skills-applier config set llm.model mistral
+skills-applier config set app.log_level DEBUG
 ```
 
 ## Troubleshooting Configuration
@@ -430,7 +430,7 @@ stats-solver config set app.log_level DEBUG
 **Solutions:**
 1. Verify skill paths are correct
 2. Check file permissions
-3. Run `stats-solver init --force`
+3. Run `skills-applier init`
 4. Enable `DEBUG` logging for more details
 
 ### Issue: Poor Recommendations
@@ -458,7 +458,7 @@ stats-solver config set app.log_level DEBUG
 1. **Start Simple**: Begin with default configuration and adjust as needed
 2. **Use Caching**: Enable caching for better performance
 3. **Monitor Logs**: Set `log_level: DEBUG` when troubleshooting
-4. **Validate Configuration**: Run `stats-solver config validate` after changes
+4. **Validate Configuration**: Run `skills-applier config validate` after changes
 5. **Backup Config**: Keep a copy of working configuration
 6. **Document Changes**: Comment custom configurations
 
