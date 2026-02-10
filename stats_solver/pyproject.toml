@@ -1,0 +1,97 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stats-solver"
+version = "0.1.0"
+description = "An intelligent statistics method recommendation system using local LLMs"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Stats Solver Team", email = "team@stats-solver.dev"}
+]
+keywords = [
+    "statistics",
+    "machine-learning",
+    "llm",
+    "data-analysis",
+    "recommendation-system"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "httpx>=0.24.0",
+    "pydantic>=2.0.0",
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+    "pyyaml>=6.0",
+    "jinja2>=3.1.0",
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+    "matplotlib>=3.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+]
+all = [
+    "stats-solver[dev]",
+    "scikit-learn>=1.2.0",
+    "pandas>=2.0.0",
+    "seaborn>=0.12.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/stats-solver"
+Documentation = "https://stats-solver.readthedocs.io"
+Repository = "https://github.com/yourusername/stats-solver"
+Issues = "https://github.com/yourusername/stats-solver/issues"
+
+[project.scripts]
+stats-solver = "stats_solver.cli.main:app"
+
+[tool.setuptools]
+packages = ["stats_solver"]
+
+[tool.setuptools.package-data]
+stats_solver = ["prompts/*.txt", "templates/*.j2", "config/*.yaml"]
+
+[tool.black]
+line-length = 100
+target-version = ['py39', 'py310', 'py311', 'py312']
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --cov=stats_solver --cov-report=html --cov-report=term"

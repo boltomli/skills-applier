@@ -1,0 +1,87 @@
+"""
+{{ docstring.summary }}
+
+{{ docstring.extended_description }}
+
+{% if docstring.customization %}
+Customization
+-------------
+{{ docstring.customization }}
+{% endif %}
+"""
+
+# {{ skill.name }}
+# {{ skill.description }}
+
+import numpy as np
+import matplotlib.pyplot as plt
+from typing import Dict, Any, Union, List, Optional, Tuple
+
+
+def {{ function_name }}({{ params|join(', ') }}):
+    """
+    {{ docstring }}
+
+    Parameters
+    ----------
+    {% for param in parameters %}
+    {{ param.name }} : {{ param.type }}
+        {{ param.description }}{% if param.default %} (default: {{ param.default }}){% endif %}
+    {% endfor %}
+
+    Returns
+    -------
+    Tuple[plt.Figure, plt.Axes]
+        A tuple containing the figure and axes objects
+
+    Raises
+    ------
+    ValueError
+        If input validation fails
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import matplotlib.pyplot as plt
+    {% for example in usage_examples %}
+    >>> {{ example }}
+    {% endfor %}
+    """
+    # Input validation
+    {% for param in parameters %}
+    if param.required:
+    if {{ param.name }} is None:
+        raise ValueError("{{ param.name }} is required")
+    {{ param.name }} = np.asarray({{ param.name }})
+    {% endif %}
+    {% endfor %}
+
+    # Create figure
+    {% for line in figure_creation_lines %}
+    {{ line }}
+    {% endfor %}
+
+    # Create plot
+    {% for line in plot_creation_lines %}
+    {{ line }}
+    {% endfor %}
+
+    # Customize plot
+    {% for line in customization_lines %}
+    {{ line }}
+    {% endfor %}
+
+    # Add annotations if needed
+    {% for line in annotation_lines %}
+    {{ line }}
+    {% endfor %}
+
+    plt.tight_layout()
+    return fig, ax
+
+
+if __name__ == "__main__":
+    # Example usage
+    {% for example in main_examples %}
+    {{ example }}
+    {% endfor %}

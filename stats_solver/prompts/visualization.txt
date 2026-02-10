@@ -1,0 +1,79 @@
+You are an expert in data visualization using Python. Your task is to generate visualization code for statistical and mathematical data.
+
+## Task Description
+
+Generate Python code to create a visualization for the given data and requirements:
+
+### Visualization Requirements
+- **Plot Type**: {plot_type}
+- **Data Description**: {data_description}
+- **Title**: {title}
+- **X-axis Label**: {xlabel}
+- **Y-axis Label**: {ylabel}
+
+### Context
+- **Skill Name**: {skill_name}
+- **Problem Type**: {problem_type}
+- **Statistical Concept**: {statistical_concept}
+
+## Visualization Guidelines
+
+1. **Library**: Use matplotlib for the visualization
+2. **Structure**:
+   - Import required libraries
+   - Define a function that creates the plot
+   - Return the figure object
+   - Include example usage
+
+3. **Plot Elements**:
+   - Appropriate plot type for the data
+   - Clear axis labels and title
+   - Grid when appropriate
+   - Legend when multiple series
+   - Appropriate color scheme
+
+4. **Customization**:
+   - Adjust figure size for readability
+   - Use appropriate font sizes
+   - Include proper spacing
+   - Add annotations if needed
+
+5. **Best Practices**:
+   - Handle edge cases (empty data, NaN values)
+   - Validate inputs
+   - Use meaningful colors
+   - Include data labels when appropriate
+
+## Output Format
+
+Return your code as a JSON object:
+
+```json
+{
+  "code": "Complete Python code",
+  "description": "Description of the visualization",
+  "plot_type": "histogram|scatter|line|bar|box|violin|heatmap|pie",
+  "libraries": ["matplotlib", "numpy"],
+  "confidence": 0.0-1.0
+}
+```
+
+## Example
+
+**Input:**
+- Plot Type: histogram
+- Data: Numerical sample data
+- Title: Distribution of Sample Data
+- X-label: Value
+- Y-label: Frequency
+
+**Output:**
+```json
+{
+  "code": "import matplotlib.pyplot as plt\nimport numpy as np\n\ndef create_histogram(data, bins=30):\n    \"\"\"\n    Create a histogram visualization.\n\n    Parameters\n    ----------\n    data : array-like\n        Data to plot\n    bins : int, optional\n        Number of bins (default: 30)\n\n    Returns\n    -------\n    fig : matplotlib.figure.Figure\n        The generated figure\n    \"\"\"\n    data = np.asarray(data)\n\n    # Create figure\n    fig, ax = plt.subplots(figsize=(10, 6))\n\n    # Create histogram\n    ax.hist(data, bins=bins, edgecolor='black', alpha=0.7)\n\n    # Customize plot\n    ax.set_title('Distribution of Sample Data', fontsize=14, fontweight='bold')\n    ax.set_xlabel('Value', fontsize=12)\n    ax.set_ylabel('Frequency', fontsize=12)\n    ax.grid(True, alpha=0.3)\n\n    plt.tight_layout()\n    return fig\n\nif __name__ == \"__main__\":\n    # Example usage\n    sample_data = np.random.normal(50, 15, 100)\n    fig = create_histogram(sample_data)\n    plt.show()",
+  "description": "Histogram showing the distribution of sample data with 30 bins",
+  "plot_type": "histogram",
+  "libraries": ["matplotlib", "numpy"],
+  "confidence": 0.9
+}
+```

@@ -1,0 +1,140 @@
+You are an expert in statistics and data analysis. Your task is to recommend the most appropriate statistical methods or mathematical implementations for a given problem.
+
+## Task Description
+
+Given a user's problem description and extracted features, recommend the best skills from the available skill set. Consider:
+
+1. **Problem-Skill Compatibility**: How well does the skill address the problem type?
+2. **Data Type Matching**: Does the skill work with the data types involved?
+3. **Statistical Validity**: Are the method's assumptions satisfied?
+4. **Practical Considerations**: Complexity, dependencies, computational requirements
+5. **Output Requirements**: Does the skill produce the required output format?
+
+## Input Information
+
+### Problem Analysis
+- **Summary**: {problem_summary}
+- **Primary Goal**: {primary_goal}
+- **Problem Type**: {problem_type}
+- **Data Types**: {data_types}
+- **Constraints**: {constraints}
+- **Output Format**: {output_format}
+
+### Available Skills
+{skills_list}
+
+## Output Format
+
+Return your recommendations as a JSON object:
+
+```json
+{
+  "primary_recommendation": {
+    "skill_id": "skill-id",
+    "skill_name": "Skill Name",
+    "match_score": 0.0-1.0,
+    "confidence": 0.0-1.0,
+    "reasoning": "Why this skill is recommended"
+  },
+  "alternative_recommendations": [
+    {
+      "skill_id": "alt-skill-id",
+      "skill_name": "Alternative Skill Name",
+      "match_score": 0.0-1.0,
+      "reasoning": "Why this alternative makes sense"
+    }
+  ],
+  "recommendation_chain": [
+    {
+      "step": 1,
+      "skill_id": "step-skill-id",
+      "skill_name": "Step Skill Name",
+      "purpose": "Purpose of this step"
+    }
+  ],
+  "assumptions": ["assumption1", "assumption2"],
+  "warnings": ["warning1", "warning2"],
+  "confidence": 0.0-1.0
+}
+```
+
+## Guidelines
+
+- Prioritize skills that directly address the problem type
+- Consider the complexity level appropriate for the user's needs
+- Highlight any assumptions that need to be verified
+- Warn about potential pitfalls or limitations
+- Provide alternatives when multiple approaches are valid
+- Consider building a workflow when multi-step analysis is needed
+
+## Example
+
+**Problem Analysis:**
+- Summary: Compare test scores between two classes
+- Primary Goal: Determine if there's a significant difference
+- Problem Type: hypothesis_test
+- Data Types: numerical
+- Constraints: []
+- Output Format: number
+
+**Available Skills:**
+- t-test-two-sample: Performs independent samples t-test
+- mann-whitney: Non-parametric alternative to t-test
+- bootstrap-difference: Bootstrap-based difference test
+
+**Your Output:**
+```json
+{
+  "primary_recommendation": {
+    "skill_id": "t-test-two-sample",
+    "skill_name": "Two-Sample T-Test",
+    "match_score": 0.95,
+    "confidence": 0.9,
+    "reasoning": "Directly addresses the goal of comparing two group means with numerical data"
+  },
+  "alternative_recommendations": [
+    {
+      "skill_id": "mann-whitney",
+      "skill_name": "Mann-Whitney U Test",
+      "match_score": 0.8,
+      "reasoning": "Non-parametric alternative if normality assumptions are violated"
+    },
+    {
+      "skill_id": "bootstrap-difference",
+      "skill_name": "Bootstrap Difference Test",
+      "match_score": 0.75,
+      "reasoning": "Distribution-free approach that doesn't require normality"
+    }
+  ],
+  "recommendation_chain": [
+    {
+      "step": 1,
+      "skill_id": "descriptive-statistics",
+      "skill_name": "Descriptive Statistics",
+      "purpose": "Understand the data distribution before testing"
+    },
+    {
+      "step": 2,
+      "skill_id": "normality-test",
+      "skill_name": "Normality Test",
+      "purpose": "Verify t-test assumptions"
+    },
+    {
+      "step": 3,
+      "skill_id": "t-test-two-sample",
+      "skill_name": "Two-Sample T-Test",
+      "purpose": "Perform the hypothesis test"
+    }
+  ],
+  "assumptions": [
+    "Samples are independent",
+    "Data is approximately normally distributed",
+    "Equal variances between groups (or use Welch's t-test)"
+  ],
+  "warnings": [
+    "Check normality assumptions before using t-test",
+    "Consider sample size - small samples may reduce power"
+  ],
+  "confidence": 0.9
+}
+```

@@ -1,0 +1,68 @@
+# Stats Solver Default Configuration
+
+# LLM Configuration
+llm:
+  provider: ollama  # Options: ollama, lm_studio
+  host: localhost
+  port: 11434
+  model: llama3
+  timeout: 30
+
+# LM Studio Configuration (alternative)
+# llm:
+#   provider: lm_studio
+#   host: localhost
+#   port: 1234
+#   model: your-model-name
+
+# Application Settings
+app:
+  log_level: INFO  # Options: DEBUG, INFO, WARNING, ERROR
+  max_recommendations: 5
+  output_dir: output
+  enable_cache: true
+
+# Feature Flags
+features:
+  enable_llm_classification: true
+  enable_auto_metadata: true
+  enable_code_generation: true
+  enable_visualization: true
+
+# Skill Configuration
+skills:
+  base_paths:
+    - ../Exploring Mathematics with Python
+    - ../Introduction to Probability
+  metadata_cache_path: ../data/skills_metadata
+  auto_scan: true
+  auto_classify: true
+
+# Recommendation Settings
+recommendation:
+  default_method: balanced  # Options: weighted_score, confidence_score, balanced, popularity
+  min_score_threshold: 0.5
+  include_alternatives: true
+  max_alternatives: 3
+
+# Code Generation Settings
+code_generation:
+  include_examples: true
+  include_docstrings: true
+  include_type_hints: true
+  include_error_handling: true
+  default_template: auto  # Options: auto, template, llm
+
+# Output Settings
+output:
+  format: markdown  # Options: markdown, json, text
+  include_dependencies: true
+  include_sample_data: true
+  save_intermediate: false
+
+# Validation Settings
+validation:
+  check_syntax: true
+  check_imports: true
+  check_style: false
+  strict_mode: false

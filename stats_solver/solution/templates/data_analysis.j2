@@ -1,0 +1,89 @@
+"""
+{{ docstring.summary }}
+
+{{ docstring.extended_description }}
+
+{% if docstring.steps %}
+Analysis Steps
+--------------
+{% for step in docstring.steps %}
+{{ loop.index }}. {{ step }}
+{% endfor %}
+{% endif %}
+"""
+
+# {{ skill.name }}
+# {{ skill.description }}
+
+import numpy as np
+import pandas as pd
+from scipy import stats
+from typing import Dict, Any, Union, List, Optional
+import matplotlib.pyplot as plt
+
+
+def {{ function_name }}({{ params|join(', ') }}):
+    """
+    {{ docstring }}
+
+    Parameters
+    ----------
+    {% for param in parameters %}
+    {{ param.name }} : {{ param.type }}
+        {{ param.description }}{% if param.default %} (default: {{ param.default }}){% endif %}
+    {% endfor %}
+
+    Returns
+    -------
+    Dict[str, Any]
+        Dictionary containing analysis results with the following keys:
+        {% for key in result_keys %}
+        - {{ key }}: {{ result_descriptions[loop.index0] }}
+        {% endfor %}
+
+    Raises
+    ------
+    ValueError
+        If input validation fails
+
+    Examples
+    --------
+    >>> import numpy as np
+    {% for example in usage_examples %}
+    >>> {{ example }}
+    {% endfor %}
+    """
+    # Input validation
+    {% for param in parameters %}
+    if param.required:
+    if {{ param.name }} is None:
+        raise ValueError("{{ param.name }} is required")
+    {{ param.name }} = np.asarray({{ param.name }})
+    {% endif %}
+    {% endfor %}
+
+    results = {}
+
+    # Step 1: Preprocessing
+    {% for line in preprocessing_lines %}
+    {{ line }}
+    {% endfor %}
+
+    # Step 2: Analysis
+    {% for line in analysis_lines %}
+    {{ line }}
+    {% endfor %}
+
+    # Step 3: Post-processing
+    {% for line in postprocessing_lines %}
+    {{ line }}
+    {% endfor %}
+
+    return results
+
+
+if __name__ == "__main__":
+    # Example usage
+    {% for example in main_examples %}
+    {{ example }}
+    {% endfor %}

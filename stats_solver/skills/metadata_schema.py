@@ -1,0 +1,192 @@
+"""Skill metadata JSON schema definitions."""
+
+from enum import Enum
+from typing import List, Optional, Dict, Any
+from pydantic import BaseModel, Field
+
+
+class SkillCategory(str, Enum):
+    """Skill category classification."""
+    
+    STATISTICAL_METHOD = "statistical_method"
+    MATHEMATICAL_IMPLEMENTATION = "mathematical_implementation"
+    DATA_ANALYSIS = "data_analysis"
+    VISUALIZATION = "visualization"
+    ALGORITHM = "algorithm"
+
+
+class DataType(str, Enum):
+    """Data types that skills can work with."""
+    
+    NUMERICAL = "numerical"
+    CATEGORICAL = "categorical"
+    TIME_SERIES = "time_series"
+    TEXT = "text"
+    BOOLEAN = "boolean"
+    MIXED = "mixed"
+
+
+class SkillMetadata(BaseModel):
+    """Metadata schema for a skill."""
+    
+    # Basic identification
+    name: str = Field(..., description="Name of the skill")
+    id: str = Field(..., description="Unique identifier (directory name)")
+    path: str = Field(..., description="Relative path to skill directory")
+    
+    # Classification
+    category: SkillCategory = Field(..., description="Primary skill category")
+    tags: List[str] = Field(default_factory=list, description="Descriptive tags")
+    
+    # Data capabilities
+    input_data_types: List[DataType] = Field(
+        default_factory=list,
+        description="Data types this skill can accept as input"
+    )
+    output_format: Optional[str] = Field(
+        None,
+        description="Format of output (e.g., 'plot', 'table', 'number')"
+    )
+    
+    # Description
+    description: str = Field(..., description="Brief description of what the skill does")
+    long_description: Optional[str] = Field(
+        None,
+        description="Detailed description of the skill"
+    )
+    
+    # Dependencies
+    dependencies: List[str] = Field(
+        default_factory=list,
+        description="Python dependencies required"
+    )
+    
+    # Prerequisites
+    prerequisites: List[str] = Field(
+        default_factory=list,
+        description="Other skills that should be used before this one"
+    )
+    
+    # Use cases
+    use_cases: List[str] = Field(
+        default_factory=list,
+        description="Example use cases or problem scenarios"
+    )
+    
+    # Statistical context (for statistical methods)
+    statistical_concept: Optional[str] = Field(
+        None,
+        description="Statistical concept (e.g., 'hypothesis_testing', 'regression')"
+    )
+    assumptions: List[str] = Field(
+        default_factory=list,
+        description="Statistical assumptions the skill relies on"
+    )
+    
+    # Algorithm context (for mathematical implementations)
+    algorithm_name: Optional[str] = Field(
+        None,
+        description="Name of the algorithm implemented"
+    )
+    complexity: Optional[str] = Field(
+        None,
+        description="Time/space complexity (e.g., 'O(n log n)')"
+    )
+    
+    # Additional metadata
+    confidence: float = Field(
+        default=1.0,
+        ge=0.0,
+        le=1.0,
+        description="Confidence score for auto-generated metadata"
+    )
+    source: str = Field(
+        default="manual",
+        description="Source of metadata ('manual', 'llm', 'hybrid')"
+    )
+    last_updated: Optional[str] = Field(
+        None,
+        description="ISO timestamp of last update"
+    )
+    
+    # Custom fields
+    custom_fields: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Additional custom metadata fields"
+    )
+    
+    class Config:
+        """Pydantic config."""
+        json_schema_extra = {
+            "example": {
+                "name": "T-Test for Means",
+                "id": "t-test-means",
+                "path": "Exploring Mathematics with Python/t-test-means",
+                "category": "statistical_method",
+                "tags": ["hypothesis_testing", "means", "parametric"],
+                "input_data_types": ["numerical"],
+                "output_format": "table",
+                "description": "Performs a t-test to compare means between two groups",
+                "dependencies": ["scipy", "numpy", "pandas"],
+                "statistical_concept": "hypothesis_testing",
+                "assumptions": ["normality", "independent_samples", "equal_variance"],
+                "use_cases": [
+                    "Comparing average test scores between two classes",
+                    "Testing if a new process improves output"
+                ],
+                "confidence": 0.95,
+                "source": "llm"
+            }
+        }
+
+
+class SkillIndexMetadata(BaseModel):
+    """Metadata for the entire skill index."""
+    
+    skills: List[SkillMetadata] = Field(
+        default_factory=list,
+        description="List of all indexed skills"
+    )
+    categories: Dict[str, int] = Field(
+        default_factory=dict,
+        description="Count of skills per category"
+    )
+    last_updated: str = Field(
+        ...,
+        description="ISO timestamp of last index update"
+    )
+    total_skills: int = Field(default=0, description="Total number of skills")
+    
+    def add_skill(self, skill: SkillMetadata) -> None:
+        """Add a skill to the index."""
+        self.skills.append(skill)
+        self.total_skills = len(self.skills)
+        self._update_categories()
+    
+    def _update_categories(self) -> None:
+        """Update category counts."""
+        self.categories = {}
+        for skill in self.skills:
+            cat = skill.category.value
+            self.categories[cat] = self.categories.get(cat, 0) + 1
+    
+    def get_by_category(self, category: SkillCategory) -> List[SkillMetadata]:
+        """Get all skills in a category."""
+        return [s for s in self.skills if s.category == category]
+    
+    def get_by_tag(self, tag: str) -> List[SkillMetadata]:
+        """Get all skills with a specific tag."""
+        return [s for s in self.skills if tag in s.tags]
+    
+    def search(self, query: str) -> List[SkillMetadata]:
+        """Search skills by name, description, or tags."""
+        query = query.lower()
+        results = []
+        for skill in self.skills:
+            if (
+                query in skill.name.lower()
+                or query in skill.description.lower()
+                or any(query in tag.lower() for tag in skill.tags)
+            ):
+                results.append(skill)
+        return results

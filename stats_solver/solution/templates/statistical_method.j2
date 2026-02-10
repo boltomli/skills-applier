@@ -1,0 +1,78 @@
+"""
+{{ docstring.summary }}
+
+{{ docstring.extended_description }}
+
+{% if docstring.assumptions %}
+Notes
+-----
+{{ docstring.assumptions|join('\n') }}
+{% endif %}
+
+{% if docstring.references %}
+References
+----------
+{% for ref in docstring.references %}
+.. [{{ loop.index }}] {{ ref }}
+{% endfor %}
+{% endif %}
+"""
+
+# {{ skill.name }}
+# {{ skill.description }}
+
+import numpy as np
+from scipy import stats
+from typing import Dict, Any, Union, List, Optional
+
+
+def {{ function_name }}({{ params|join(', ') }}):
+    """
+    {{ docstring }}
+
+    Parameters
+    ----------
+    {% for param in parameters %}
+    {{ param.name }} : {{ param.type }}
+        {{ param.description }}{% if param.default %} (default: {{ param.default }}){% endif %}
+    {% endfor %}
+
+    Returns
+    -------
+    {{ return_type }}
+        {{ return_description }}
+
+    Raises
+    ------
+    ValueError
+        If input validation fails
+
+    Examples
+    --------
+    >>> import numpy as np
+    {% for example in usage_examples %}
+    >>> {{ example }}
+    {% endfor %}
+    """
+    # Input validation
+    {% for param in parameters %}
+    if param.required:
+    if {{ param.name }} is None:
+        raise ValueError("{{ param.name }} is required")
+    {{ param.name }} = np.asarray({{ param.name }})
+    {% endif %}
+    {% endfor %}
+
+    # Implementation
+    {% for line in implementation_lines %}
+    {{ line }}
+    {% endfor %}
+
+    return result
+
+
+if __name__ == "__main__":
+    # Example usage
+    {% for example in main_examples %}
+    {{ example }}
+    {% endfor %}

@@ -1,0 +1,79 @@
+"""
+{{ docstring.summary }}
+
+{{ docstring.extended_description }}
+
+{% if docstring.algorithm %}
+Algorithm
+---------
+{{ docstring.algorithm }}
+{% endif %}
+
+{% if docstring.complexity %}
+Complexity
+----------
+{{ docstring.complexity }}
+{% endif %}
+"""
+
+# {{ skill.name }}
+# {{ skill.description }}
+
+import numpy as np
+from typing import Any, Union, List, Optional
+
+
+def {{ function_name }}({{ params|join(', ') }}):
+    """
+    {{ docstring }}
+
+    Parameters
+    ----------
+    {% for param in parameters %}
+    {{ param.name }} : {{ param.type }}
+        {{ param.description }}{% if param.default %} (default: {{ param.default }}){% endif %}
+    {% endfor %}
+
+    Returns
+    -------
+    {{ return_type }}
+        {{ return_description }}
+
+    Raises
+    ------
+    ValueError
+        If input validation fails
+    {% for exception in exceptions %}
+    {{ exception }}
+    {% endfor %}
+
+    Examples
+    --------
+    >>> import numpy as np
+    {% for example in usage_examples %}
+    >>> {{ example }}
+    {% endfor %}
+    """
+    # Input validation
+    {% for param in parameters %}
+    if param.required:
+    if {{ param.name }} is None:
+        raise ValueError("{{ param.name }} is required")
+    {% endif %}
+    {% endfor %}
+
+    # Implementation
+    {% for line in implementation_lines %}
+    {{ line }}
+    {% endfor %}
+
+    return result
+
+
+if __name__ == "__main__":
+    # Example usage with performance metrics
+    import time
+
+    {% for example in main_examples %}
+    {{ example }}
+    {% endfor %}
