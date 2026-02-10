@@ -1,4 +1,4 @@
-# Stats Solver
+# Skills Applier
 
 An intelligent statistics method recommendation system that uses local LLMs to analyze your data problems and recommend the most appropriate statistical methods and mathematical implementations from the available skill library.
 
@@ -15,25 +15,30 @@ An intelligent statistics method recommendation system that uses local LLMs to a
 
 ### Prerequisites
 
-- Python 3.9 or higher
+- Python 3.14 or higher
 - Local LLM (Ollama or LM Studio)
 - pip package manager
 
 ### Step 1: Clone the Repository
 
 ```bash
-git clone <repository-url>
-cd stats_solver
+git clone https://github.com/boltomli/skills-applier
+cd skills-applier
 ```
 
 ### Step 2: Install Dependencies
 
+Using uv (recommended):
+```bash
+uv sync
+```
+
+Or using pip:
 ```bash
 pip install -e .
 ```
 
 Or install manually:
-
 ```bash
 pip install httpx pydantic typer rich pyyaml jinja2 numpy scipy matplotlib
 ```
@@ -58,28 +63,25 @@ pip install httpx pydantic typer rich pyyaml jinja2 numpy scipy matplotlib
 2. Start LM Studio and load a model
 3. Configure the API endpoint (default: http://localhost:1234)
 
-### Step 4: Configure Stats Solver
+### Step 4: Configure Skills Applier
 
-1. Copy the example environment file:
-   ```bash
-   cp .env.example .env
-   ```
+Configure LLM settings in `config/default.yaml`:
+```yaml
+llm:
+  provider: ollama  # or lm_studio
+  host: localhost
+  port: 11434
+  model: llama3
+  timeout: 30
+```
 
-2. Edit `.env` with your LLM configuration:
-   ```env
-   LLM_PROVIDER=ollama
-   LLM_HOST=localhost
-   LLM_PORT=11434
-   LLM_MODEL=llama3
-   ```
-
-3. Configure skill paths in `config/default.yaml`:
-   ```yaml
-   skills:
-     base_paths:
-       - ../Exploring Mathematics with Python
-       - ../Introduction to Probability
-   ```
+Configure skill paths in `config/default.yaml`:
+```yaml
+skills:
+  base_paths:
+    - ../Exploring Mathematics with Python
+    - ../Introduction to Probability
+```
 
 ## Quick Start
 
@@ -185,16 +187,21 @@ stats-solver config list
 ## Project Structure
 
 ```
-stats_solver/
-├── cli/                 # Command-line interface
-├── llm/                 # LLM integration
-├── problem/             # Problem analysis
-├── recommendation/      # Method recommendation
-├── skills/              # Skill indexing
-├── solution/            # Code generation
-├── prompts/             # LLM prompts
-├── config/              # Configuration files
-└── templates/           # Code templates
+skills-applier/
+├── stats_solver/
+│   ├── cli/                 # Command-line interface
+│   ├── llm/                 # LLM integration
+│   ├── problem/             # Problem analysis
+│   ├── recommendation/      # Method recommendation
+│   ├── skills/              # Skill indexing
+│   ├── solution/            # Code generation
+│   ├── prompts/             # LLM prompts
+│   ├── config/              # Configuration files
+│   └── docs/                # Documentation
+├── data/                    # Data files and metadata
+├── tests/                   # Test suite
+├── main.py                  # Entry point
+└── pyproject.toml           # Project configuration
 ```
 
 ## Skill Categories
@@ -342,13 +349,13 @@ To add new skills:
 
 ## License
 
-MIT License
+WTFPL (Do What The F*ck You Want To Public License)
 
 ## Support
 
 For issues and questions:
-- GitHub Issues: <repository-url>/issues
-- Documentation: <repository-url>/docs
+- GitHub Issues: https://github.com/boltomli/skills-applier/issues
+- Documentation: See `docs/` directory in this folder
 
 ## Acknowledgments
 

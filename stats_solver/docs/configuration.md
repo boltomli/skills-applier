@@ -91,56 +91,19 @@ validation:
 
 ## Environment Variables
 
-Create a `.env` file in the project root to override configuration:
+Stats Solver configuration is primarily managed through YAML configuration files. Environment variables can be set to override specific settings, but the recommended approach is to edit the configuration files directly.
 
-```env
-# LLM Configuration
+Key environment variables that can be set:
+
+```bash
+# LLM Configuration (overrides config/default.yaml)
 LLM_PROVIDER=ollama
 LLM_HOST=localhost
 LLM_PORT=11434
 LLM_MODEL=llama3
-LLM_TIMEOUT=30
 
-# Application Settings
+# Logging
 LOG_LEVEL=INFO
-MAX_RECOMMENDATIONS=5
-OUTPUT_DIR=output
-ENABLE_CACHE=true
-
-# Feature Flags
-ENABLE_LLM_CLASSIFICATION=true
-ENABLE_AUTO_METADATA=true
-ENABLE_CODE_GENERATION=true
-ENABLE_VISUALIZATION=true
-
-# Skill Configuration
-AUTO_SCAN=true
-AUTO_CLASSIFY=true
-
-# Recommendation Settings
-DEFAULT_METHOD=balanced
-MIN_SCORE_THRESHOLD=0.5
-INCLUDE_ALTERNATIVES=true
-MAX_ALTERNATIVES=3
-
-# Code Generation Settings
-INCLUDE_EXAMPLES=true
-INCLUDE_DOCSTRINGS=true
-INCLUDE_TYPE_HINTS=true
-INCLUDE_ERROR_HANDLING=true
-DEFAULT_TEMPLATE=auto
-
-# Output Settings
-OUTPUT_FORMAT=markdown
-INCLUDE_DEPENDENCIES=true
-INCLUDE_SAMPLE_DATA=true
-SAVE_INTERMEDIATE=false
-
-# Validation Settings
-CHECK_SYNTAX=true
-CHECK_IMPORTS=true
-CHECK_STYLE=false
-STRICT_MODE=false
 ```
 
 ## LLM Configuration
@@ -252,8 +215,10 @@ Configure where skill metadata is cached:
 
 ```yaml
 skills:
-  metadata_cache_path: /path/to/cache
+  metadata_cache_path: ../data/skills_metadata
 ```
+
+The default metadata cache path is relative to the `stats_solver/` directory and points to `data/skills_metadata/` at the project root.
 
 ### Auto-Scan and Auto-Classify
 
@@ -509,6 +474,6 @@ For a complete list of all configuration options, see:
 
 For configuration help:
 
-- GitHub Issues: <repository-url>/issues
-- Documentation: <repository-url>/docs/configuration.md
-- Community: <community-url>
+- GitHub Issues: https://github.com/boltomli/skills-applier/issues
+- Documentation: See `stats_solver/docs/` directory
+- Community: https://github.com/boltomli/skills-applier/discussions

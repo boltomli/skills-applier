@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Stats Solver will be documented in this file.
+All notable changes to Skills Applier will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Core project structure and modules
-- LLM abstraction layer and providers
+- LLM abstraction layer and providers (Ollama, LM Studio)
 - Skill scanner, classifier, and indexer
 - Problem analyzer with feature extraction
 - Recommendation matcher and scorer
@@ -29,18 +29,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CLI with main commands (init, solve, skills, config)
 - Configuration management system
 - Testing framework with unit and integration tests
-- Documentation (README, configuration guide, skill guide)
+- Documentation (README, configuration guide, skill guide, feature flags, rollback)
+- Python 3.14 support
 
 ### Security
 - All LLM calls use local providers only (no cloud dependencies)
 - Input validation for all user inputs
 - Safe code generation with validation
-
-## [0.0.1] - 2026-01-XX
-
-### Added
-- Project initialization
-- Basic infrastructure
 
 ---
 

@@ -635,6 +635,6 @@ def histogram_analysis(data: np.ndarray,
 
 For help with adding skills:
 
-- GitHub Issues: <repository-url>/issues
-- Documentation: <repository-url>/docs
-- Community: <community-url>
+- GitHub Issues: https://github.com/boltomli/skills-applier/issues
+- Documentation: See `stats_solver/docs/` directory
+- Community: https://github.com/boltomli/skills-applier/discussions
