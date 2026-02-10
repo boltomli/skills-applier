@@ -4,8 +4,8 @@ Unit tests for LLM integration module.
 
 import pytest
 import httpx
-from unittest.mock import Mock, patch, MagicMock
-from stats_solver.llm.base import LLMProvider, LLMMessage, LLMResponse
+from unittest.mock import Mock, patch
+from stats_solver.llm.base import LLMMessage, LLMResponse
 from stats_solver.llm.ollama import OllamaProvider
 from stats_solver.llm.lm_studio import LMStudioProvider
 from stats_solver.llm.factory import LLMProviderFactory
@@ -37,7 +37,7 @@ class TestLLMResponse:
             content="Hello there!",
             finish_reason="stop",
             model="llama3",
-            usage={"prompt_tokens": 10, "completion_tokens": 5}
+            usage={"prompt_tokens": 10, "completion_tokens": 5},
         )
         assert response.content == "Hello there!"
         assert response.finish_reason == "stop"
@@ -60,17 +60,12 @@ class TestOllamaProvider:
         assert provider.model == "llama3"
         assert provider.base_url == "http://localhost:11434"
 
-    @patch('httpx.Client')
+    @patch("httpx.Client")
     def test_list_models(self, mock_client, provider):
         """Test listing available models."""
         mock_response = Mock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "models": [
-                {"name": "llama3"},
-                {"name": "mistral"}
-            ]
-        }
+        mock_response.json.return_value = {"models": [{"name": "llama3"}, {"name": "mistral"}]}
         mock_client.return_value.__enter__.return_value.get.return_value = mock_response
 
         models = provider.list_models()
@@ -78,7 +73,7 @@ class TestOllamaProvider:
         assert "llama3" in models
         assert "mistral" in models
 
-    @patch('httpx.Client')
+    @patch("httpx.Client")
     def test_generate_response(self, mock_client, provider):
         """Test generating a response."""
         mock_response = Mock()
@@ -88,7 +83,7 @@ class TestOllamaProvider:
             "message": {"role": "assistant", "content": "Hello!"},
             "done": True,
             "prompt_eval_count": 10,
-            "eval_count": 5
+            "eval_count": 5,
         }
         mock_client.return_value.__enter__.return_value.post.return_value = mock_response
 
@@ -99,7 +94,7 @@ class TestOllamaProvider:
         assert response.model == "llama3"
         assert response.finish_reason == "stop"
 
-    @patch('httpx.Client')
+    @patch("httpx.Client")
     def test_connection_error(self, mock_client, provider):
         """Test handling connection errors."""
         mock_client.return_value.__enter__.return_value.get.side_effect = httpx.ConnectError
@@ -123,7 +118,7 @@ class TestLMStudioProvider:
         assert provider.model == "test-model"
         assert provider.base_url == "http://localhost:1234"
 
-    @patch('httpx.Client')
+    @patch("httpx.Client")
     def test_generate_response(self, mock_client, provider):
         """Test generating a response."""
         mock_response = Mock()
@@ -131,13 +126,10 @@ class TestLMStudioProvider:
         mock_response.json.return_value = {
             "id": "test-id",
             "choices": [
-                {
-                    "message": {"role": "assistant", "content": "Response!"},
-                    "finish_reason": "stop"
-                }
+                {"message": {"role": "assistant", "content": "Response!"}, "finish_reason": "stop"}
             ],
             "model": "test-model",
-            "usage": {"prompt_tokens": 10, "completion_tokens": 5}
+            "usage": {"prompt_tokens": 10, "completion_tokens": 5},
         }
         mock_client.return_value.__enter__.return_value.post.return_value = mock_response
 
@@ -153,31 +145,19 @@ class TestLLMProviderFactory:
 
     def test_create_ollama_provider(self):
         """Test creating an Ollama provider."""
-        config = {
-            "provider": "ollama",
-            "host": "localhost",
-            "port": 11434,
-            "model": "llama3"
-        }
+        config = {"provider": "ollama", "host": "localhost", "port": 11434, "model": "llama3"}
         provider = LLMProviderFactory.create(config)
         assert isinstance(provider, OllamaProvider)
 
     def test_create_lm_studio_provider(self):
         """Test creating an LM Studio provider."""
-        config = {
-            "provider": "lm_studio",
-            "host": "localhost",
-            "port": 1234,
-            "model": "test"
-        }
+        config = {"provider": "lm_studio", "host": "localhost", "port": 1234, "model": "test"}
         provider = LLMProviderFactory.create(config)
         assert isinstance(provider, LMStudioProvider)
 
     def test_invalid_provider(self):
         """Test handling invalid provider type."""
-        config = {
-            "provider": "invalid"
-        }
+        config = {"provider": "invalid"}
         with pytest.raises(ValueError, match="Unsupported LLM provider"):
             LLMProviderFactory.create(config)
 
@@ -188,13 +168,15 @@ class TestLLMManager:
     @pytest.fixture
     def manager(self):
         """Create an LLM manager instance."""
-        return LLMManager({
-            "provider": "ollama",
-            "host": "localhost",
-            "port": 11434,
-            "model": "llama3",
-            "timeout": 30
-        })
+        return LLMManager(
+            {
+                "provider": "ollama",
+                "host": "localhost",
+                "port": 11434,
+                "model": "llama3",
+                "timeout": 30,
+            }
+        )
 
     def test_initialization(self, manager):
         """Test manager initialization."""
@@ -206,7 +188,7 @@ class TestLLMManager:
         provider = manager.get_provider()
         assert isinstance(provider, OllamaProvider)
 
-    @patch.object(OllamaProvider, 'list_models')
+    @patch.object(OllamaProvider, "list_models")
     def test_check_connection(self, mock_list, manager):
         """Test checking connection."""
         mock_list.return_value = ["llama3", "mistral"]

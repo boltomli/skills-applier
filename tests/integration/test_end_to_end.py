@@ -3,8 +3,6 @@ End-to-end integration tests for the stats solver system.
 """
 
 import pytest
-import tempfile
-from pathlib import Path
 from unittest.mock import Mock, patch
 from stats_solver.llm.manager import LLMManager
 from stats_solver.skills.index import SkillIndex
@@ -34,7 +32,7 @@ class TestEndToEndWorkflow:
                 "problem_types": ["hypothesis_test"],
                 "tags": ["parametric", "hypothesis_test"],
                 "dependencies": ["numpy", "scipy"],
-                "popularity": 0.9
+                "popularity": 0.9,
             },
             {
                 "skill_id": "linear-regression",
@@ -45,7 +43,7 @@ class TestEndToEndWorkflow:
                 "problem_types": ["regression"],
                 "tags": ["modeling", "prediction"],
                 "dependencies": ["numpy", "scipy", "sklearn"],
-                "popularity": 0.95
+                "popularity": 0.95,
             },
             {
                 "skill_id": "fibonacci",
@@ -56,8 +54,8 @@ class TestEndToEndWorkflow:
                 "problem_types": ["computation"],
                 "tags": ["sequence", "algorithm"],
                 "dependencies": ["numpy"],
-                "popularity": 0.85
-            }
+                "popularity": 0.85,
+            },
         ]
 
         for skill in sample_skills:
@@ -95,9 +93,7 @@ class TestEndToEndWorkflow:
         # Step 5: Generate solution code
         generator = CodeGenerator()
         solution = generator.generate(
-            skill=scored_matches[0]["skill"],
-            problem=problem_features,
-            method="template"
+            skill=scored_matches[0]["skill"], problem=problem_features, method="template"
         )
 
         assert solution is not None
@@ -106,7 +102,9 @@ class TestEndToEndWorkflow:
 
     def test_complete_workflow_regression(self, skill_index):
         """Test complete workflow for regression problem."""
-        user_problem = "I want to predict house prices based on square footage and number of bedrooms."
+        user_problem = (
+            "I want to predict house prices based on square footage and number of bedrooms."
+        )
 
         extractor = ProblemExtractor()
         problem_features = extractor.extract(user_problem)
@@ -136,7 +134,7 @@ class TestEndToEndWorkflow:
         assert len(matches) > 0
         assert matches[0]["skill_id"] == "fibonacci"
 
-    @patch.object(LLMManager, 'check_connection')
+    @patch.object(LLMManager, "check_connection")
     def test_workflow_with_llm_integration(self, mock_check, skill_index):
         """Test workflow with LLM integration."""
         mock_check.return_value = (True, ["llama3"])
@@ -226,7 +224,7 @@ class TestErrorHandlingIntegration:
         # Add skill with incomplete metadata
         incomplete_skill = {
             "skill_id": "incomplete",
-            "name": "Incomplete Skill"
+            "name": "Incomplete Skill",
             # Missing required fields
         }
 
@@ -252,12 +250,13 @@ class TestPerformanceIntegration:
                 "description": f"Description for skill {i}",
                 "category": "statistical_method",
                 "data_types": ["numerical"],
-                "problem_types": ["hypothesis_test"]
+                "problem_types": ["hypothesis_test"],
             }
             index.add_skill(f"skill-{i}", skill)
 
         # Test search performance
         import time
+
         start = time.time()
         results = index.search(category="statistical_method")
         elapsed = time.time() - start
@@ -277,7 +276,7 @@ class TestPerformanceIntegration:
                 "description": f"Description {i}",
                 "category": "statistical_method",
                 "data_types": ["numerical"],
-                "problem_types": ["hypothesis_test"]
+                "problem_types": ["hypothesis_test"],
             }
             index.add_skill(f"skill-{i}", skill)
 

@@ -3,11 +3,9 @@ Unit tests for skill indexing module.
 """
 
 import pytest
-import json
 import tempfile
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-from stats_solver.skills.metadata_schema import SkillMetadata, validate_metadata
+from unittest.mock import Mock, patch
+from stats_solver.skills.metadata_schema import validate_metadata
 from stats_solver.skills.scanner import SkillScanner
 from stats_solver.skills.classifier import SkillClassifier
 from stats_solver.skills.index import SkillIndex
@@ -26,17 +24,14 @@ class TestSkillMetadata:
             "category": "statistical_method",
             "tags": ["test", "example"],
             "data_types": ["numerical"],
-            "problem_types": ["hypothesis_test"]
+            "problem_types": ["hypothesis_test"],
         }
         result = validate_metadata(metadata)
         assert result.is_valid is True
 
     def test_missing_required_field(self):
         """Test validating metadata with missing required field."""
-        metadata = {
-            "name": "Test Skill",
-            "description": "A test skill"
-        }
+        metadata = {"name": "Test Skill", "description": "A test skill"}
         result = validate_metadata(metadata)
         assert result.is_valid is False
         assert "skill_id" in result.errors
@@ -47,7 +42,7 @@ class TestSkillMetadata:
             "skill_id": "test-skill",
             "name": "Test Skill",
             "description": "A test skill",
-            "category": "invalid_category"
+            "category": "invalid_category",
         }
         result = validate_metadata(metadata)
         assert result.is_valid is False
@@ -66,7 +61,7 @@ class TestSkillScanner:
         assert len(scanner.base_paths) == 1
         assert scanner.base_paths[0] == "./test_skills"
 
-    @patch('pathlib.Path.glob')
+    @patch("pathlib.Path.glob")
     def test_scan_directory(self, mock_glob, scanner):
         """Test scanning a directory."""
         mock_file1 = Mock()
@@ -96,7 +91,7 @@ class TestSkillClassifier:
         skill_data = {
             "skill_id": "t-test",
             "name": "T-Test",
-            "description": "Performs t-test for hypothesis testing"
+            "description": "Performs t-test for hypothesis testing",
         }
         result = classifier.classify(skill_data)
         assert result.category == "statistical_method"
@@ -107,7 +102,7 @@ class TestSkillClassifier:
         skill_data = {
             "skill_id": "fibonacci",
             "name": "Fibonacci",
-            "description": "Calculates fibonacci numbers"
+            "description": "Calculates fibonacci numbers",
         }
         result = classifier.classify(skill_data)
         assert result.category == "mathematical_implementation"
@@ -133,7 +128,7 @@ class TestSkillIndex:
             "skill_id": "test-skill",
             "name": "Test Skill",
             "description": "A test skill",
-            "category": "statistical_method"
+            "category": "statistical_method",
         }
         index.add_skill("test-skill", metadata)
         skill = index.get_skill("test-skill")
@@ -142,15 +137,11 @@ class TestSkillIndex:
 
     def test_search_by_category(self, index):
         """Test searching skills by category."""
-        metadata1 = {
-            "skill_id": "skill1",
-            "name": "Skill 1",
-            "category": "statistical_method"
-        }
+        metadata1 = {"skill_id": "skill1", "name": "Skill 1", "category": "statistical_method"}
         metadata2 = {
             "skill_id": "skill2",
             "name": "Skill 2",
-            "category": "mathematical_implementation"
+            "category": "mathematical_implementation",
         }
 
         index.add_skill("skill1", metadata1)
@@ -166,7 +157,7 @@ class TestSkillIndex:
             "skill_id": "skill1",
             "name": "Skill 1",
             "category": "statistical_method",
-            "tags": ["hypothesis_test", "parametric"]
+            "tags": ["hypothesis_test", "parametric"],
         }
 
         index.add_skill("skill1", metadata)
@@ -194,7 +185,7 @@ class TestSkillEditor:
         metadata = {
             "skill_id": "test-skill",
             "name": "Test Skill",
-            "category": "statistical_method"
+            "category": "statistical_method",
         }
         editor.index.add_skill("test-skill", metadata)
 
@@ -208,7 +199,7 @@ class TestSkillEditor:
             "skill_id": "test-skill",
             "name": "Test Skill",
             "category": "statistical_method",
-            "tags": ["tag1"]
+            "tags": ["tag1"],
         }
         editor.index.add_skill("test-skill", metadata)
 

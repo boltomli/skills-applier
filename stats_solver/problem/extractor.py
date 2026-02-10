@@ -1,7 +1,7 @@
 """Problem feature extractor for analyzing user queries."""
 
 import logging
-from typing import Dict, List, Optional, Any
+from typing import List, Optional
 import re
 
 from ..llm.base import LLMProvider
@@ -12,36 +12,36 @@ logger = logging.getLogger(__name__)
 
 class ProblemFeatures(BaseModel):
     """Extracted features from a user problem."""
-    
+
     # Core problem statement
     description: str
     summary: str
-    
+
     # Data characteristics
     data_types: List[DataType]
     data_source_hints: List[str]
     sample_size_hint: Optional[str] = None
-    
+
     # Problem type
     problem_type: str
     subtypes: List[str]
-    
+
     # Goals and objectives
     primary_goal: str
     secondary_goals: List[str]
-    
+
     # Constraints
     constraints: List[str]
     assumptions: List[str]
-    
+
     # Expected output
     output_format: Optional[str] = None
     output_requirements: List[str] = []
-    
+
     # Domain and context
     domain: Optional[str] = None
     context_keywords: List[str] = []
-    
+
     # Complexity indicators
     complexity_score: float = 0.5
     requires_multi_step: bool = False
@@ -50,35 +50,74 @@ class ProblemFeatures(BaseModel):
 
 class ProblemExtractor:
     """Extract features from user problem descriptions."""
-    
+
     # Keywords indicating different problem types
     PROBLEM_TYPE_KEYWORDS = {
         "hypothesis_test": [
-            "test", "hypothesis", "compare", "difference", "significant",
-            "p-value", "confidence", "reject", "fail to reject",
+            "test",
+            "hypothesis",
+            "compare",
+            "difference",
+            "significant",
+            "p-value",
+            "confidence",
+            "reject",
+            "fail to reject",
         ],
         "regression": [
-            "predict", "relationship", "correlation", "trend", "model",
-            "fit", "forecast", "linear", "regression",
+            "predict",
+            "relationship",
+            "correlation",
+            "trend",
+            "model",
+            "fit",
+            "forecast",
+            "linear",
+            "regression",
         ],
         "classification": [
-            "classify", "category", "group", "label", "predict class",
-            "decision", "separate", "cluster",
+            "classify",
+            "category",
+            "group",
+            "label",
+            "predict class",
+            "decision",
+            "separate",
+            "cluster",
         ],
         "descriptive": [
-            "describe", "summarize", "analyze", "explore", "understand",
-            "distribution", "statistics", "mean", "median",
+            "describe",
+            "summarize",
+            "analyze",
+            "explore",
+            "understand",
+            "distribution",
+            "statistics",
+            "mean",
+            "median",
         ],
         "optimization": [
-            "optimize", "minimize", "maximize", "best", "optimal",
-            "find", "solve", "min", "max",
+            "optimize",
+            "minimize",
+            "maximize",
+            "best",
+            "optimal",
+            "find",
+            "solve",
+            "min",
+            "max",
         ],
         "simulation": [
-            "simulate", "monte carlo", "random", "generate", "sample",
-            "bootstrap", "resample",
+            "simulate",
+            "monte carlo",
+            "random",
+            "generate",
+            "sample",
+            "bootstrap",
+            "resample",
         ],
     }
-    
+
     # Keywords indicating data sources
     DATA_SOURCE_KEYWORDS = {
         "survey": ["survey", "questionnaire", "poll", "response"],
@@ -87,23 +126,23 @@ class ProblemExtractor:
         "sensor": ["sensor", "device", "instrument", "monitor"],
         "database": ["database", "records", "log", "data"],
     }
-    
+
     def __init__(self, use_llm: bool = False, llm_provider: Optional[LLMProvider] = None) -> None:
         """Initialize problem extractor.
-        
+
         Args:
             use_llm: Whether to use LLM for extraction
             llm_provider: LLM provider instance (required if use_llm=True)
         """
         self.use_llm = use_llm
         self.llm_provider = llm_provider
-    
+
     async def extract(self, problem_description: str) -> ProblemFeatures:
         """Extract features from a problem description.
-        
+
         Args:
             problem_description: User's problem description
-            
+
         Returns:
             Extracted problem features
         """
@@ -111,44 +150,44 @@ class ProblemExtractor:
             return await self._extract_with_llm(problem_description)
         else:
             return self._extract_with_rules(problem_description)
-    
+
     def _extract_with_rules(self, problem_description: str) -> ProblemFeatures:
         """Extract features using rule-based approach.
-        
+
         Args:
             problem_description: User's problem description
-            
+
         Returns:
             Extracted problem features
         """
         text = problem_description.lower()
-        
+
         # Detect problem type
         problem_type, subtypes = self._detect_problem_type(text)
-        
+
         # Detect data types
         data_types = self._detect_data_types(text)
-        
+
         # Detect data source hints
         data_source_hints = self._detect_data_sources(text)
-        
+
         # Extract goals
         primary_goal, secondary_goals = self._extract_goals(problem_description)
-        
+
         # Extract constraints
         constraints = self._extract_constraints(problem_description)
-        
+
         # Detect output format hints
         output_format = self._detect_output_format(text)
-        
+
         # Extract context keywords
         context_keywords = self._extract_context_keywords(problem_description)
-        
+
         # Assess complexity
-        complexity_score, requires_multi_step, requires_visualization = (
-            self._assess_complexity(text)
+        complexity_score, requires_multi_step, requires_visualization = self._assess_complexity(
+            text
         )
-        
+
         return ProblemFeatures(
             description=problem_description,
             summary=self._generate_summary(problem_description),
@@ -166,27 +205,27 @@ class ProblemExtractor:
             requires_multi_step=requires_multi_step,
             requires_visualization=requires_visualization,
         )
-    
+
     async def _extract_with_llm(self, problem_description: str) -> ProblemFeatures:
         """Extract features using LLM.
-        
+
         Args:
             problem_description: User's problem description
-            
+
         Returns:
             Extracted problem features
         """
         if not self.llm_provider:
             raise RuntimeError("LLM provider not configured")
-        
+
         prompt = self._build_extraction_prompt(problem_description)
-        
+
         try:
             result = await self.llm_provider.generate_json(
                 prompt,
                 system_prompt="You are an expert in analyzing mathematical and statistical problems. Extract structured features from problem descriptions.",
             )
-            
+
             # Parse data types
             data_types = []
             for dt in result.get("data_types", []):
@@ -194,7 +233,7 @@ class ProblemExtractor:
                     data_types.append(DataType(dt))
                 except ValueError:
                     pass
-            
+
             return ProblemFeatures(
                 description=problem_description,
                 summary=result.get("summary", ""),
@@ -215,18 +254,18 @@ class ProblemExtractor:
                 requires_multi_step=result.get("requires_multi_step", False),
                 requires_visualization=result.get("requires_visualization", False),
             )
-            
+
         except Exception as e:
             logger.error(f"LLM extraction failed: {e}")
             # Fallback to rule-based
             return self._extract_with_rules(problem_description)
-    
+
     def _build_extraction_prompt(self, problem_description: str) -> str:
         """Build extraction prompt for LLM.
-        
+
         Args:
             problem_description: User's problem description
-            
+
         Returns:
             Prompt string
         """
@@ -252,13 +291,13 @@ Return a JSON object with:
 - complexity_score: Complexity score (0.0 to 1.0)
 - requires_multi_step: Boolean indicating if multi-step analysis is needed
 - requires_visualization: Boolean indicating if visualization is needed"""
-    
+
     def _detect_problem_type(self, text: str) -> tuple[str, list[str]]:
         """Detect problem type from text.
-        
+
         Args:
             text: Lowercase text to analyze
-            
+
         Returns:
             Tuple of (problem_type, subtypes)
         """
@@ -267,60 +306,60 @@ Return a JSON object with:
             score = sum(1 for kw in keywords if kw in text)
             if score > 0:
                 scores[problem_type] = score
-        
+
         if not scores:
             return "unknown", []
-        
+
         # Get highest scoring type
         problem_type = max(scores, key=scores.get)
-        
+
         # Generate subtypes based on specific keywords found
         subtypes = []
         for kw in self.PROBLEM_TYPE_KEYWORDS[problem_type]:
             if kw in text:
                 subtypes.append(kw)
-        
+
         return problem_type, subtypes[:5]
-    
+
     def _detect_data_types(self, text: str) -> List[DataType]:
         """Detect data types from text.
-        
+
         Args:
             text: Lowercase text to analyze
-            
+
         Returns:
             List of detected data types
         """
         detected_types = set()
-        
+
         if any(kw in text for kw in ["number", "numeric", "count", "value", "amount"]):
             detected_types.add(DataType.NUMERICAL)
-        
+
         if any(kw in text for kw in ["category", "class", "group", "type", "label"]):
             detected_types.add(DataType.CATEGORICAL)
-        
+
         if any(kw in text for kw in ["time", "date", "trend", "over time", "period"]):
             detected_types.add(DataType.TIME_SERIES)
-        
+
         if any(kw in text for kw in ["text", "word", "string", "document"]):
             detected_types.add(DataType.TEXT)
-        
+
         if any(kw in text for kw in ["yes/no", "true/false", "binary", "boolean"]):
             detected_types.add(DataType.BOOLEAN)
-        
+
         if len(detected_types) > 1:
             return [DataType.MIXED]
         elif detected_types:
             return list(detected_types)
         else:
             return [DataType.NUMERICAL]
-    
+
     def _detect_data_sources(self, text: str) -> List[str]:
         """Detect data source hints from text.
-        
+
         Args:
             text: Lowercase text to analyze
-            
+
         Returns:
             List of detected data sources
         """
@@ -329,42 +368,42 @@ Return a JSON object with:
             if any(kw in text for kw in keywords):
                 sources.append(source)
         return sources
-    
+
     def _extract_goals(self, text: str) -> tuple[str, list[str]]:
         """Extract goals from problem description.
-        
+
         Args:
             text: Problem description text
-            
+
         Returns:
             Tuple of (primary_goal, secondary_goals)
         """
         # Look for goal indicators
         goal_indicators = ["i want", "need to", "want to", "should", "goal is", "objective"]
-        
+
         sentences = text.split(". ")
         goals = []
-        
+
         for sentence in sentences:
             if any(indicator in sentence.lower() for indicator in goal_indicators):
                 goals.append(sentence.strip())
-        
+
         if not goals:
             return "Analyze the problem", []
-        
+
         return goals[0], goals[1:]
-    
+
     def _extract_constraints(self, text: str) -> List[str]:
         """Extract constraints from problem description.
-        
+
         Args:
             text: Problem description text
-            
+
         Returns:
             List of constraints
         """
         constraints = []
-        
+
         constraint_patterns = [
             r"only\s+(\w+)",
             r"must\s+(\w+)",
@@ -373,19 +412,19 @@ Return a JSON object with:
             r"maximum\s+(\w+)",
             r"minimum\s+(\w+)",
         ]
-        
+
         for pattern in constraint_patterns:
             matches = re.findall(pattern, text, re.IGNORECASE)
             constraints.extend(matches)
-        
+
         return list(set(constraints))
-    
+
     def _detect_output_format(self, text: str) -> Optional[str]:
         """Detect expected output format from text.
-        
+
         Args:
             text: Lowercase text to analyze
-            
+
         Returns:
             Output format or None
         """
@@ -399,61 +438,91 @@ Return a JSON object with:
             return "boolean"
         elif any(kw in text for kw in ["explain", "describe", "report", "summary"]):
             return "text"
-        
+
         return None
-    
+
     def _extract_context_keywords(self, text: str) -> List[str]:
         """Extract relevant context keywords.
-        
+
         Args:
             text: Problem description text
-            
+
         Returns:
             List of context keywords
         """
         # Simple keyword extraction (could be enhanced)
         keywords = re.findall(r"\b[a-z]{4,}\b", text.lower())
-        
+
         # Filter out common words
-        stop_words = {"this", "that", "with", "from", "have", "will", "what", "when", "where", "which", "their", "about"}
+        stop_words = {
+            "this",
+            "that",
+            "with",
+            "from",
+            "have",
+            "will",
+            "what",
+            "when",
+            "where",
+            "which",
+            "their",
+            "about",
+        }
         keywords = [kw for kw in keywords if kw not in stop_words]
-        
+
         return list(set(keywords))[:10]
-    
+
     def _assess_complexity(self, text: str) -> tuple[float, bool, bool]:
         """Assess problem complexity.
-        
+
         Args:
             text: Lowercase text to analyze
-            
+
         Returns:
             Tuple of (complexity_score, requires_multi_step, requires_visualization)
         """
         complexity_indicators = [
-            "multiple", "several", "various", "compare", "relationship",
-            "interaction", "multivariate", "complex", "sophisticated",
+            "multiple",
+            "several",
+            "various",
+            "compare",
+            "relationship",
+            "interaction",
+            "multivariate",
+            "complex",
+            "sophisticated",
         ]
-        
+
         visualization_indicators = [
-            "plot", "graph", "chart", "visualize", "display", "show",
+            "plot",
+            "graph",
+            "chart",
+            "visualize",
+            "display",
+            "show",
         ]
-        
+
         multi_step_indicators = [
-            "then", "after", "followed by", "next", "finally", "first",
+            "then",
+            "after",
+            "followed by",
+            "next",
+            "finally",
+            "first",
         ]
-        
+
         complexity_score = min(len([kw for kw in complexity_indicators if kw in text]) * 0.2, 1.0)
         requires_multi_step = any(kw in text for kw in multi_step_indicators)
         requires_visualization = any(kw in text for kw in visualization_indicators)
-        
+
         return complexity_score, requires_multi_step, requires_visualization
-    
+
     def _generate_summary(self, text: str) -> str:
         """Generate a brief summary of the problem.
-        
+
         Args:
             text: Problem description text
-            
+
         Returns:
             Summary string
         """
@@ -465,4 +534,3 @@ Return a JSON object with:
 
 
 # Import at end to avoid circular dependency
-from pydantic import BaseModel

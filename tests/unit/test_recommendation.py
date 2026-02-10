@@ -3,7 +3,7 @@ Unit tests for method recommendation module.
 """
 
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 from stats_solver.recommendation.matcher import SkillMatcher
 from stats_solver.recommendation.scorer import RecommendationScorer
 from stats_solver.recommendation.prerequisites import PrerequisiteChecker
@@ -28,15 +28,15 @@ class TestSkillMatcher:
                 "name": "T-Test",
                 "category": "statistical_method",
                 "data_types": ["numerical"],
-                "problem_types": ["hypothesis_test"]
+                "problem_types": ["hypothesis_test"],
             },
             {
                 "skill_id": "regression",
                 "name": "Linear Regression",
                 "category": "statistical_method",
                 "data_types": ["numerical"],
-                "problem_types": ["regression"]
-            }
+                "problem_types": ["regression"],
+            },
         ]
 
     def test_match_by_problem_type(self, matcher, sample_skills):
@@ -82,7 +82,7 @@ class TestRecommendationScorer:
             "category": "statistical_method",
             "data_types": ["numerical"],
             "problem_types": ["hypothesis_test"],
-            "popularity": 0.9
+            "popularity": 0.9,
         }
         problem_features = Mock()
         problem_features.problem_type = "hypothesis_test"
@@ -99,7 +99,7 @@ class TestRecommendationScorer:
             "category": "statistical_method",
             "data_types": ["numerical"],
             "problem_types": ["regression"],
-            "popularity": 0.7
+            "popularity": 0.7,
         }
         problem_features = Mock()
         problem_features.problem_type = "hypothesis_test"  # Different type
@@ -110,10 +110,7 @@ class TestRecommendationScorer:
 
     def test_score_data_type_mismatch(self, scorer):
         """Test scoring with data type mismatch."""
-        skill = {
-            "skill_id": "text-analysis",
-            "data_types": ["text"]
-        }
+        skill = {"skill_id": "text-analysis", "data_types": ["text"]}
         problem_features = Mock()
         problem_features.data_types = ["numerical"]
 
@@ -139,10 +136,7 @@ class TestPrerequisiteChecker:
 
     def test_satisfied_prerequisites(self, checker):
         """Test skill with satisfied prerequisites."""
-        skill = {
-            "skill_id": "advanced-test",
-            "prerequisites": ["simple-test"]
-        }
+        skill = {"skill_id": "advanced-test", "prerequisites": ["simple-test"]}
         problem_context = {"available_skills": ["simple-test"]}
 
         result = checker.check(skill, problem_context)
@@ -150,10 +144,7 @@ class TestPrerequisiteChecker:
 
     def test_unsatisfied_prerequisites(self, checker):
         """Test skill with unsatisfied prerequisites."""
-        skill = {
-            "skill_id": "advanced-test",
-            "prerequisites": ["simple-test", "data-prep"]
-        }
+        skill = {"skill_id": "advanced-test", "prerequisites": ["simple-test", "data-prep"]}
         problem_context = {"available_skills": ["simple-test"]}
 
         result = checker.check(skill, problem_context)
@@ -177,20 +168,20 @@ class TestChainBuilder:
                 "skill_id": "descriptive",
                 "name": "Descriptive Statistics",
                 "category": "statistical_method",
-                "prerequisites": []
+                "prerequisites": [],
             },
             {
                 "skill_id": "normality-test",
                 "name": "Normality Test",
                 "category": "statistical_method",
-                "prerequisites": ["descriptive"]
+                "prerequisites": ["descriptive"],
             },
             {
                 "skill_id": "t-test",
                 "name": "T-Test",
                 "category": "statistical_method",
-                "prerequisites": ["normality-test"]
-            }
+                "prerequisites": ["normality-test"],
+            },
         ]
 
     def test_build_chain(self, builder, sample_skills):
@@ -229,20 +220,20 @@ class TestAlternativeSuggester:
                 "skill_id": "t-test",
                 "name": "T-Test",
                 "category": "statistical_method",
-                "tags": ["parametric", "hypothesis_test"]
+                "tags": ["parametric", "hypothesis_test"],
             },
             {
                 "skill_id": "mann-whitney",
                 "name": "Mann-Whitney U Test",
                 "category": "statistical_method",
-                "tags": ["non-parametric", "hypothesis_test"]
+                "tags": ["non-parametric", "hypothesis_test"],
             },
             {
                 "skill_id": "bootstrap",
                 "name": "Bootstrap Test",
                 "category": "statistical_method",
-                "tags": ["distribution-free", "hypothesis_test"]
-            }
+                "tags": ["distribution-free", "hypothesis_test"],
+            },
         ]
 
     def test_suggest_alternatives(self, suggester, sample_skills):
@@ -260,8 +251,7 @@ class TestAlternativeSuggester:
 
         # Should suggest other hypothesis_test skills
         hypothesis_test_alts = [
-            alt for alt in alternatives
-            if "hypothesis_test" in alt.get("tags", [])
+            alt for alt in alternatives if "hypothesis_test" in alt.get("tags", [])
         ]
         assert len(hypothesis_test_alts) > 0
 

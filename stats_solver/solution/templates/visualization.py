@@ -6,20 +6,20 @@ from .base import BaseTemplate
 
 class VisualizationTemplate(BaseTemplate):
     """Template for visualization implementations."""
-    
+
     TEMPLATE = '''def {function_name}({params}):
     """
     {docstring}
-    
+
     Parameters
     ----------
     {param_docs}
-    
+
     Returns
     -------
     matplotlib.figure.Figure
         The generated figure object
-    
+
     Examples
     --------
     >>> {example_call}
@@ -28,19 +28,19 @@ class VisualizationTemplate(BaseTemplate):
     """
     import matplotlib.pyplot as plt
     import numpy as np
-    
+
     # Prepare data
     {data_preparation}
-    
+
     # Create figure
     fig, ax = plt.subplots(figsize={figure_size})
-    
+
     # Create plot
     {plot_code}
-    
+
     # Customize plot
     {customization}
-    
+
     return fig
 
 
@@ -48,13 +48,13 @@ if __name__ == "__main__":
     # Example usage
     {example_usage}
 '''
-    
+
     def render(self, **kwargs: Any) -> str:
         """Render the visualization template.
-        
+
         Args:
             **kwargs: Template variables
-            
+
         Returns:
             Rendered template
         """
@@ -71,26 +71,26 @@ if __name__ == "__main__":
             "customization": self._get_customization(kwargs),
             "example_usage": kwargs.get("example_usage", "fig = create_plot(data)\nplt.show()"),
         }
-        
+
         return self.TEMPLATE.format(**variables)
-    
+
     def _get_params(self, kwargs: Dict[str, Any]) -> str:
         """Get function parameters.
-        
+
         Args:
             kwargs: Template variables
-            
+
         Returns:
             Parameter string
         """
         return "data, title=None, xlabel=None, ylabel=None, **kwargs"
-    
+
     def _get_param_docs(self, kwargs: Dict[str, Any]) -> str:
         """Get parameter documentation.
-        
+
         Args:
             kwargs: Template variables
-            
+
         Returns:
             Parameter documentation
         """
@@ -104,13 +104,13 @@ if __name__ == "__main__":
         Y-axis label
     **kwargs : additional keyword arguments
         Additional keyword arguments for plotting"""
-    
+
     def _get_data_preparation(self, kwargs: Dict[str, Any]) -> str:
         """Get data preparation code.
-        
+
         Args:
             kwargs: Template variables
-            
+
         Returns:
             Data preparation code
         """
@@ -120,25 +120,25 @@ if __name__ == "__main__":
         y = data
     else:
         x, y = data.T"""
-    
+
     def _get_plot_code(self, kwargs: Dict[str, Any]) -> str:
         """Get plot creation code.
-        
+
         Args:
             kwargs: Template variables
-            
+
         Returns:
             Plot code
         """
         return """ax.plot(x, y, **kwargs)
     ax.grid(True, alpha=0.3)"""
-    
+
     def _get_customization(self, kwargs: Dict[str, Any]) -> str:
         """Get plot customization code.
-        
+
         Args:
             kwargs: Template variables
-            
+
         Returns:
             Customization code
         """
@@ -149,10 +149,10 @@ if __name__ == "__main__":
     if ylabel:
         ax.set_ylabel(ylabel)
     plt.tight_layout()"""
-    
+
     def get_name(self) -> str:
         """Get template name.
-        
+
         Returns:
             Template name
         """

@@ -24,9 +24,13 @@ class MockLLMResponses:
             "constraints": [],
             "output_format": "number",
             "statistical_concepts": ["hypothesis_testing", "mean_comparison"],
-            "assumptions": ["Samples are independent", "Data is approximately normally distributed", "Equal variances between groups"],
+            "assumptions": [
+                "Samples are independent",
+                "Data is approximately normally distributed",
+                "Equal variances between groups",
+            ],
             "domain": "education",
-            "confidence": 0.9
+            "confidence": 0.9,
         }
 
     @staticmethod
@@ -38,52 +42,52 @@ class MockLLMResponses:
                 "skill_name": "Two-Sample T-Test",
                 "match_score": 0.95,
                 "confidence": 0.9,
-                "reasoning": "Directly addresses the goal of comparing two group means with numerical data"
+                "reasoning": "Directly addresses the goal of comparing two group means with numerical data",
             },
             "alternative_recommendations": [
                 {
                     "skill_id": "mann-whitney",
                     "skill_name": "Mann-Whitney U Test",
                     "match_score": 0.8,
-                    "reasoning": "Non-parametric alternative if normality assumptions are violated"
+                    "reasoning": "Non-parametric alternative if normality assumptions are violated",
                 },
                 {
                     "skill_id": "bootstrap-difference",
                     "skill_name": "Bootstrap Difference Test",
                     "match_score": 0.75,
-                    "reasoning": "Distribution-free approach that doesn't require normality"
-                }
+                    "reasoning": "Distribution-free approach that doesn't require normality",
+                },
             ],
             "recommendation_chain": [
                 {
                     "step": 1,
                     "skill_id": "descriptive-statistics",
                     "skill_name": "Descriptive Statistics",
-                    "purpose": "Understand the data distribution before testing"
+                    "purpose": "Understand the data distribution before testing",
                 },
                 {
                     "step": 2,
                     "skill_id": "normality-test",
                     "skill_name": "Normality Test",
-                    "purpose": "Verify t-test assumptions"
+                    "purpose": "Verify t-test assumptions",
                 },
                 {
                     "step": 3,
                     "skill_id": "t-test-two-sample",
                     "skill_name": "Two-Sample T-Test",
-                    "purpose": "Perform the hypothesis test"
-                }
+                    "purpose": "Perform the hypothesis test",
+                },
             ],
             "assumptions": [
                 "Samples are independent",
                 "Data is approximately normally distributed",
-                "Equal variances between groups (or use Welch's t-test)"
+                "Equal variances between groups (or use Welch's t-test)",
             ],
             "warnings": [
                 "Check normality assumptions before using t-test",
-                "Consider sample size - small samples may reduce power"
+                "Consider sample size - small samples may reduce power",
             ],
-            "confidence": 0.9
+            "confidence": 0.9,
         }
 
     @staticmethod
@@ -129,7 +133,7 @@ if __name__ == "__main__":
     print(f"P-value: {result['pvalue']:.4f}")''',
             "imports": ["import numpy as np", "from scipy import stats"],
             "docstring": "Perform an independent two-sample t-test.",
-            "confidence": 0.95
+            "confidence": 0.95,
         }
 
 
@@ -152,7 +156,7 @@ class MockSkillData:
                 "output_types": ["number", "statistic", "pvalue"],
                 "complexity": "simple",
                 "dependencies": ["numpy", "scipy"],
-                "popularity": 0.9
+                "popularity": 0.9,
             },
             {
                 "skill_id": "mann-whitney",
@@ -166,7 +170,7 @@ class MockSkillData:
                 "output_types": ["number", "statistic", "pvalue"],
                 "complexity": "simple",
                 "dependencies": ["numpy", "scipy"],
-                "popularity": 0.85
+                "popularity": 0.85,
             },
             {
                 "skill_id": "linear-regression",
@@ -180,8 +184,8 @@ class MockSkillData:
                 "output_types": ["model", "parameters", "predictions"],
                 "complexity": "moderate",
                 "dependencies": ["numpy", "scipy", "sklearn"],
-                "popularity": 0.95
-            }
+                "popularity": 0.95,
+            },
         ]
 
     @staticmethod
@@ -200,7 +204,7 @@ class MockSkillData:
                 "output_types": ["array", "number"],
                 "complexity": "moderate",
                 "dependencies": ["numpy"],
-                "popularity": 0.85
+                "popularity": 0.85,
             },
             {
                 "skill_id": "matrix-operations",
@@ -214,8 +218,8 @@ class MockSkillData:
                 "output_types": ["array"],
                 "complexity": "simple",
                 "dependencies": ["numpy"],
-                "popularity": 0.9
-            }
+                "popularity": 0.9,
+            },
         ]
 
     @staticmethod
@@ -234,7 +238,7 @@ class MockSkillData:
                 "output_types": ["plot", "figure"],
                 "complexity": "simple",
                 "dependencies": ["matplotlib", "numpy"],
-                "popularity": 0.9
+                "popularity": 0.9,
             },
             {
                 "skill_id": "scatter-plot",
@@ -248,8 +252,8 @@ class MockSkillData:
                 "output_types": ["plot", "figure"],
                 "complexity": "simple",
                 "dependencies": ["matplotlib", "numpy"],
-                "popularity": 0.85
-            }
+                "popularity": 0.85,
+            },
         ]
 
 
@@ -263,7 +267,7 @@ class MockProblemData:
             "description": "I have test scores from two different classes and want to know if there's a significant difference between them.",
             "expected_type": "hypothesis_test",
             "expected_data_types": ["numerical"],
-            "expected_complexity": "simple"
+            "expected_complexity": "simple",
         }
 
     @staticmethod
@@ -273,7 +277,7 @@ class MockProblemData:
             "description": "I want to predict house prices based on square footage and number of bedrooms.",
             "expected_type": "regression",
             "expected_data_types": ["numerical"],
-            "expected_complexity": "moderate"
+            "expected_complexity": "moderate",
         }
 
     @staticmethod
@@ -283,7 +287,7 @@ class MockProblemData:
             "description": "I want to classify customers into different segments based on their purchasing behavior.",
             "expected_type": "classification",
             "expected_data_types": ["numerical", "categorical"],
-            "expected_complexity": "moderate"
+            "expected_complexity": "moderate",
         }
 
     @staticmethod
@@ -293,7 +297,7 @@ class MockProblemData:
             "description": "I want to visualize the distribution of my data using a histogram.",
             "expected_type": "visualization",
             "expected_data_types": ["numerical"],
-            "expected_complexity": "simple"
+            "expected_complexity": "simple",
         }
 
 
@@ -337,13 +341,13 @@ class MockSampleData:
         return {
             "numerical": np.random.normal(50, 10, size),
             "categorical": np.random.choice(["A", "B", "C"], size),
-            "boolean": np.random.choice([True, False], size)
+            "boolean": np.random.choice([True, False], size),
         }
 
 
 # Initialize mock skill database
 mock_skill_database = (
-    MockSkillData.statistical_methods() +
-    MockSkillData.mathematical_implementations() +
-    MockSkillData.visualization_skills()
+    MockSkillData.statistical_methods()
+    + MockSkillData.mathematical_implementations()
+    + MockSkillData.visualization_skills()
 )

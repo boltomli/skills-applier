@@ -7,16 +7,16 @@ from pydantic import BaseModel, Field
 
 class LLMConfig(BaseModel):
     """Configuration for LLM provider."""
-    
+
     host: str = "localhost"
     port: int = 11434
     model: str = "llama3"
     timeout: int = 30
     provider: str = "ollama"
-    
+
     # Optional API endpoint override
     api_endpoint: Optional[str] = None
-    
+
     # Model parameters
     temperature: float = 0.7
     max_tokens: Optional[int] = None
@@ -26,7 +26,7 @@ class LLMConfig(BaseModel):
 
 class LLMResponse(BaseModel):
     """Response from LLM provider."""
-    
+
     content: str
     model: str
     provider: str
@@ -37,33 +37,33 @@ class LLMResponse(BaseModel):
 
 class LLMProvider(ABC):
     """Abstract base class for LLM providers."""
-    
+
     def __init__(self, config: LLMConfig) -> None:
         """Initialize LLM provider with configuration."""
         self.config = config
         self._client: Optional[Any] = None
-    
+
     @property
     @abstractmethod
     def is_available(self) -> bool:
         """Check if the LLM service is available."""
         pass
-    
+
     @abstractmethod
     async def connect(self) -> bool:
         """Establish connection to LLM service."""
         pass
-    
+
     @abstractmethod
     async def disconnect(self) -> None:
         """Close connection to LLM service."""
         pass
-    
+
     @abstractmethod
     async def list_models(self) -> List[str]:
         """List available models."""
         pass
-    
+
     @abstractmethod
     async def generate(
         self,
@@ -75,7 +75,7 @@ class LLMProvider(ABC):
     ) -> LLMResponse:
         """Generate text from LLM."""
         pass
-    
+
     @abstractmethod
     async def generate_json(
         self,
@@ -85,7 +85,7 @@ class LLMProvider(ABC):
     ) -> Dict[str, Any]:
         """Generate JSON response from LLM."""
         pass
-    
+
     async def chat(
         self,
         messages: List[Dict[str, str]],
@@ -95,16 +95,14 @@ class LLMProvider(ABC):
     ) -> LLMResponse:
         """Generate response from chat messages."""
         # Default implementation converts chat to single prompt
-        formatted = "\n".join(
-            f"{msg['role']}: {msg['content']}" for msg in messages
-        )
+        formatted = "\n".join(f"{msg['role']}: {msg['content']}" for msg in messages)
         return await self.generate(
             formatted,
             temperature=temperature,
             max_tokens=max_tokens,
             **kwargs,
         )
-    
+
     async def health_check(self) -> Dict[str, Any]:
         """Perform health check on LLM service."""
         try:
@@ -121,7 +119,7 @@ class LLMProvider(ABC):
                 "provider": self.config.provider,
                 "error": str(e),
             }
-    
+
     def _get_endpoint(self) -> str:
         """Get API endpoint URL."""
         if self.config.api_endpoint:

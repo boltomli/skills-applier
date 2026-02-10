@@ -12,18 +12,18 @@ logger = logging.getLogger(__name__)
 
 class LMStudioProvider(LLMProvider):
     """LM Studio LLM provider implementation."""
-    
+
     # LM Studio uses OpenAI-compatible API format
     def __init__(self, config: LLMConfig) -> None:
         """Initialize LM Studio provider."""
         super().__init__(config)
         self._http_client: Optional[httpx.AsyncClient] = None
-    
+
     @property
     def is_available(self) -> bool:
         """Check if LM Studio service is available."""
         return self._http_client is not None
-    
+
     async def connect(self) -> bool:
         """Establish connection to LM Studio service."""
         try:
@@ -32,7 +32,7 @@ class LMStudioProvider(LLMProvider):
                 base_url=self._get_endpoint(),
                 timeout=timeout,
             )
-            
+
             # Test connection
             models = await self.list_models()
             logger.info(f"Connected to LM Studio, found {len(models)} models")
@@ -40,19 +40,19 @@ class LMStudioProvider(LLMProvider):
         except Exception as e:
             logger.error(f"Failed to connect to LM Studio: {e}")
             return False
-    
+
     async def disconnect(self) -> None:
         """Close connection to LM Studio service."""
         if self._http_client:
             await self._http_client.aclose()
             self._http_client = None
             logger.info("Disconnected from LM Studio")
-    
+
     async def list_models(self) -> List[str]:
         """List available LM Studio models."""
         if not self._http_client:
             raise RuntimeError("Not connected to LM Studio")
-        
+
         try:
             response = await self._http_client.get("/v1/models")
             response.raise_for_status()
@@ -61,7 +61,7 @@ class LMStudioProvider(LLMProvider):
         except Exception as e:
             logger.error(f"Failed to list models: {e}")
             raise
-    
+
     async def generate(
         self,
         prompt: str,
@@ -73,16 +73,16 @@ class LMStudioProvider(LLMProvider):
         """Generate text from LM Studio using chat completion API."""
         if not self._http_client:
             raise RuntimeError("Not connected to LM Studio")
-        
+
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
-        
+
         return await self._send_chat_request(
             messages, temperature=temperature, max_tokens=max_tokens, **kwargs
         )
-    
+
     async def generate_json(
         self,
         prompt: str,
@@ -92,14 +92,14 @@ class LMStudioProvider(LLMProvider):
         """Generate JSON response from LM Studio."""
         # Add JSON formatting instruction to system prompt
         json_instruction = "You must respond with valid JSON only. Do not include any explanation or markdown formatting."
-        
+
         if system_prompt:
             system_prompt = f"{system_prompt}\n\n{json_instruction}"
         else:
             system_prompt = json_instruction
-        
+
         response = await self.generate(prompt, system_prompt=system_prompt, **kwargs)
-        
+
         try:
             # Extract JSON from response (handle potential markdown code blocks)
             content = response.content.strip()
@@ -109,13 +109,13 @@ class LMStudioProvider(LLMProvider):
                 content = content[3:]
             if content.endswith("```"):
                 content = content[:-3]
-            
+
             return json.loads(content.strip())
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse JSON response: {e}")
             logger.error(f"Response content: {response.content}")
             raise ValueError(f"LLM did not return valid JSON: {e}")
-    
+
     async def chat(
         self,
         messages: List[Dict[str, str]],
@@ -127,7 +127,7 @@ class LMStudioProvider(LLMProvider):
         return await self._send_chat_request(
             messages, temperature=temperature, max_tokens=max_tokens, **kwargs
         )
-    
+
     async def _send_chat_request(
         self,
         messages: List[Dict[str, str]],
@@ -138,7 +138,7 @@ class LMStudioProvider(LLMProvider):
         """Send chat completion request to LM Studio."""
         if not self._http_client:
             raise RuntimeError("Not connected to LM Studio")
-        
+
         payload = {
             "model": self.config.model,
             "messages": messages,
@@ -146,18 +146,18 @@ class LMStudioProvider(LLMProvider):
             "max_tokens": max_tokens or self.config.max_tokens,
             "top_p": self.config.top_p,
         }
-        
+
         if self.config.top_k:
             payload["top_k"] = self.config.top_k
-        
+
         try:
             response = await self._http_client.post("/v1/chat/completions", json=payload)
             response.raise_for_status()
             data = response.json()
-            
+
             choice = data.get("choices", [{}])[0]
             message = choice.get("message", {})
-            
+
             return LLMResponse(
                 content=message.get("content", ""),
                 model=data.get("model", self.config.model),

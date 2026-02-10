@@ -3,7 +3,7 @@ Unit tests for problem analysis module.
 """
 
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 from stats_solver.problem.extractor import ProblemExtractor
 from stats_solver.problem.data_types import DataTypeDetector
 from stats_solver.problem.classifier import ProblemClassifier
@@ -181,13 +181,13 @@ class TestProblemExtractor:
         result = extractor.extract(description)
         assert "normality" in str(result.assumptions).lower()
 
-    @patch.object(ProblemExtractor, '_use_llm_extraction')
+    @patch.object(ProblemExtractor, "_use_llm_extraction")
     def test_llm_fallback(self, mock_llm, extractor):
         """Test using LLM extraction as fallback."""
         mock_llm.return_value = {
             "summary": "LLM extracted summary",
             "problem_type": "hypothesis_test",
-            "confidence": 0.9
+            "confidence": 0.9,
         }
 
         description = "Complex problem requiring deeper analysis"

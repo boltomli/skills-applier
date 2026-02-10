@@ -3,7 +3,7 @@ Unit tests for solution generation module.
 """
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch
 from stats_solver.solution.code_generator import CodeGenerator
 from stats_solver.solution.docstring import DocstringGenerator
 from stats_solver.solution.dependencies import DependencyExtractor
@@ -30,9 +30,9 @@ class TestCodeGenerator:
             "category": "statistical_method",
             "parameters": [
                 {"name": "sample1", "type": "array-like", "required": True},
-                {"name": "sample2", "type": "array-like", "required": True}
+                {"name": "sample2", "type": "array-like", "required": True},
             ],
-            "dependencies": ["numpy", "scipy"]
+            "dependencies": ["numpy", "scipy"],
         }
 
     @pytest.fixture
@@ -41,7 +41,7 @@ class TestCodeGenerator:
         return {
             "summary": "Compare two group means",
             "data_types": ["numerical"],
-            "output_format": "number"
+            "output_format": "number",
         }
 
     def test_generate_from_template(self, generator, sample_skill, sample_problem):
@@ -50,7 +50,7 @@ class TestCodeGenerator:
         assert code is not None
         assert "import" in code  # Should contain imports
 
-    @patch.object(CodeGenerator, '_generate_with_llm')
+    @patch.object(CodeGenerator, "_generate_with_llm")
     def test_generate_with_llm(self, mock_llm, generator, sample_skill, sample_problem):
         """Test generating code with LLM."""
         mock_llm.return_value = "generated_code"
@@ -90,10 +90,8 @@ class TestDocstringGenerator:
         function_info = {
             "name": "calculate_mean",
             "purpose": "Calculate the arithmetic mean",
-            "parameters": [
-                {"name": "data", "type": "array-like", "description": "Input data"}
-            ],
-            "returns": {"type": "float", "description": "The mean value"}
+            "parameters": [{"name": "data", "type": "array-like", "description": "Input data"}],
+            "returns": {"type": "float", "description": "The mean value"},
         }
 
         docstring = generator.generate(function_info, style="numpy")
@@ -108,7 +106,7 @@ class TestDocstringGenerator:
             "purpose": "Test function",
             "parameters": [],
             "returns": {"type": "None", "description": "Nothing"},
-            "examples": ["test_function()", "test_function(arg=1)"]
+            "examples": ["test_function()", "test_function(arg=1)"],
         }
 
         docstring = generator.generate(function_info)
@@ -138,10 +136,7 @@ import matplotlib.pyplot as plt
 
     def test_extract_from_skill_metadata(self, extractor):
         """Test extracting dependencies from skill metadata."""
-        skill = {
-            "skill_id": "test",
-            "dependencies": ["numpy", "pandas", "scipy"]
-        }
+        skill = {"skill_id": "test", "dependencies": ["numpy", "pandas", "scipy"]}
         deps = extractor.extract_from_metadata(skill)
         assert len(deps) == 3
         assert "numpy" in deps
@@ -165,28 +160,19 @@ class TestSampleDataGenerator:
     def test_generate_random_data(self, generator):
         """Test generating random numerical data."""
         data = generator.generate_random(
-            size=100,
-            distribution="normal",
-            params={"loc": 0, "scale": 1}
+            size=100, distribution="normal", params={"loc": 0, "scale": 1}
         )
         assert len(data) == 100
 
     def test_generate_categorical_data(self, generator):
         """Test generating categorical data."""
-        data = generator.generate_categorical(
-            size=50,
-            categories=["A", "B", "C"]
-        )
+        data = generator.generate_categorical(size=50, categories=["A", "B", "C"])
         assert len(data) == 50
         assert all(cat in ["A", "B", "C"] for cat in data)
 
     def test_generate_time_series_data(self, generator):
         """Test generating time series data."""
-        data = generator.generate_time_series(
-            size=100,
-            trend=True,
-            noise=True
-        )
+        data = generator.generate_time_series(size=100, trend=True, noise=True)
         assert len(data) == 100
 
 
@@ -200,30 +186,18 @@ class TestVisualizationGenerator:
 
     def test_generate_histogram_code(self, generator):
         """Test generating histogram visualization code."""
-        code = generator.generate_histogram(
-            data_var="data",
-            title="Distribution",
-            x_label="Value"
-        )
+        code = generator.generate_histogram(data_var="data", title="Distribution", x_label="Value")
         assert "hist" in code
         assert "Distribution" in code
 
     def test_generate_scatter_code(self, generator):
         """Test generating scatter plot code."""
-        code = generator.generate_scatter(
-            x_var="x",
-            y_var="y",
-            title="Scatter Plot"
-        )
+        code = generator.generate_scatter(x_var="x", y_var="y", title="Scatter Plot")
         assert "scatter" in code
 
     def test_generate_line_plot_code(self, generator):
         """Test generating line plot code."""
-        code = generator.generate_line_plot(
-            x_var="x",
-            y_var="y",
-            title="Trend"
-        )
+        code = generator.generate_line_plot(x_var="x", y_var="y", title="Trend")
         assert "plot" in code
 
 
