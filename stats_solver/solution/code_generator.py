@@ -98,7 +98,7 @@ class CodeGenerator:
         imports = self.dependency_generator.generate_imports(context.skill.dependencies)
 
         # Generate docstring
-        docstring = self.docstring_generator.generate(context)
+        docstring = self.docstring_generator.generate(context.skill, context.problem_description)
 
         return GeneratedCode(
             code=code,

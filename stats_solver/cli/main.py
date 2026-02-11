@@ -5,6 +5,7 @@ import logging
 import typer
 from rich.console import Console
 from rich.table import Table
+from rich.syntax import Syntax
 
 from .. import setup_logging
 from ..llm.manager import LLMManager
@@ -225,13 +226,93 @@ def recommend(
 def generate(
     skill_id: str = typer.Argument(..., help="Skill ID to generate code for"),
     output: str | None = typer.Option(None, "--output", "-o", help="Output file path"),
+    method: str = typer.Option(
+        "auto", "--method", "-m", help="Method to use (auto, template, llm)"
+    ),
 ):
     """Generate Python code for a skill."""
+    import asyncio
+    from pathlib import Path
+
+    from ..skills.index import SkillIndex
+    from ..solution.code_generator import CodeGenerator, GenerationContext
+    from ..llm.manager import LLMManager
+
     console.print(f"[bold cyan]Generating code for:[/bold cyan] {skill_id}")
 
-    # This will be implemented with full integration
-    console.print("\n[yellow]Code generation feature coming soon![/yellow]")
-    console.print("This will generate Python code for the specified skill.")
+    async def _generate():
+        global llm_manager
+
+        # Initialize LLM manager if not already done
+        if llm_manager is None:
+            try:
+                llm_manager = LLMManager.from_env()
+                await llm_manager.initialize()
+            except Exception as e:
+                console.print(f"[yellow]![/yellow] LLM not available: {e}")
+                console.print("[dim]Continuing with template-based generation...[/dim]")
+
+        # Determine if we should use LLM
+        use_llm = method == "llm" or (method == "auto" and llm_manager is not None)
+
+        # Load skill index
+        console.print("\n[cyan]Loading skill...[/cyan]")
+        skill_index = SkillIndex()
+        await skill_index.load()
+
+        skill = skill_index.get_skill(skill_id)
+
+        if not skill:
+            console.print(f"[red]Skill '{skill_id}' not found[/red]")
+            console.print("[dim]Use 'skills-applier skills list' to see available skills[/dim]")
+            return
+
+        console.print(f"[dim]Found:[/dim] {skill.name}")
+        console.print(f"[dim]Description:[/dim] {skill.description}")
+
+        # Generate code
+        console.print("\n[cyan]Generating code...[/cyan]")
+
+        code_generator = CodeGenerator(llm_provider=llm_manager.provider if llm_manager else None)
+
+        context = GenerationContext(
+            skill=skill,
+            problem_description=skill.description,
+            data_description="Your data",
+            output_requirements="Result",
+        )
+
+        try:
+            generated = await code_generator.generate(context, use_llm=use_llm)
+
+            # Format the code
+            full_code = code_generator.format_code(generated)
+
+            # Output code
+            if output:
+                # Write to file
+                output_path = Path(output)
+                output_path.write_text(full_code, encoding="utf-8")
+                console.print(f"[green]✓[/green] Code written to: {output}")
+            else:
+                # Print to console
+                console.print("\n[bold green]Generated Code:[/bold green]\n")
+                console.print(Syntax(full_code, "python", theme="monokai", line_numbers=True))
+
+            # Print metadata
+            console.print(f"\n[dim]Method: {generated.metadata.get('method', 'unknown')}[/dim]")
+            console.print(
+                f"[dim]Imports: {', '.join(generated.imports) if generated.imports else 'None'}[/dim]"
+            )
+
+        except Exception as e:
+            console.print(f"[red]Error generating code: {e}[/red]")
+            logger.error(f"Code generation failed: {e}")
+            import traceback
+
+            traceback.print_exc()
+
+    asyncio.run(_generate())
 
 
 @app.command()

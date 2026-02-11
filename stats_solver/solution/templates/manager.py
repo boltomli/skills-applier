@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 
-from ..skills.metadata_schema import SkillCategory
+from ...skills.metadata_schema import SkillCategory
 from .base import BaseTemplate
 
 logger = logging.getLogger(__name__)
