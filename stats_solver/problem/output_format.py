@@ -5,6 +5,8 @@ from typing import List, Dict, Optional, Any
 from enum import Enum
 import re
 
+from pydantic import BaseModel
+
 from ..llm.base import LLMProvider
 
 logger = logging.getLogger(__name__)

@@ -4,6 +4,8 @@ import logging
 from typing import List, Dict, Optional, Any
 import re
 
+from pydantic import BaseModel
+
 from ..skills.metadata_schema import DataType
 
 logger = logging.getLogger(__name__)

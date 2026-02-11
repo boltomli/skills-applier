@@ -4,6 +4,8 @@ import logging
 from typing import List, Optional
 import re
 
+from pydantic import BaseModel
+
 from ..llm.base import LLMProvider
 from ..skills.metadata_schema import DataType
 

@@ -6,7 +6,6 @@ __version__ = "0.1.0"
 
 import logging
 import sys
-from pathlib import Path
 
 
 # Configure root logger

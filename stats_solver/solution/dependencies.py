@@ -43,7 +43,6 @@ class DependencyGenerator:
         "seaborn": "seaborn",
         "sns": "seaborn",
         "sklearn": "scikit-learn",
-        "sklearn": "scikit-learn",
         "plotly": "plotly",
         "statsmodels": "statsmodels",
     }

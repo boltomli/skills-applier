@@ -126,7 +126,7 @@ def check():
         if llm_manager is None:
             try:
                 llm_manager = LLMManager.from_env()
-                initialized = await llm_manager.initialize()
+                await llm_manager.initialize()
             except Exception as e:
                 console.print(f"[red]✗[/red] Failed to initialize LLM manager: {e}")
                 return
@@ -136,7 +136,7 @@ def check():
                 health = await llm_manager.health_check()
 
                 if health["available"]:
-                    console.print(f"[green]✓[/green] LLM is available")
+                    console.print("[green]✓[/green] LLM is available")
                     console.print(f"  Provider: {health['provider']}")
                     console.print(f"  Model: {health['model']}")
                     console.print(f"  Available models: {health['models_count']}")

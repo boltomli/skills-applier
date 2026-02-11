@@ -4,6 +4,8 @@ import logging
 from typing import List, Dict, Optional
 from enum import Enum
 
+from pydantic import BaseModel
+
 from ..llm.base import LLMProvider
 from .data_types import DataTypeDetectionResult
 

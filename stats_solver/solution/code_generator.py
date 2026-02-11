@@ -2,7 +2,6 @@
 
 import logging
 from typing import List, Dict, Optional, Any
-from pathlib import Path
 from dataclasses import dataclass
 
 from ..skills.metadata_schema import SkillMetadata

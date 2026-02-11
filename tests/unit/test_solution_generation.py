@@ -54,7 +54,7 @@ class TestCodeGenerator:
     def test_generate_with_llm(self, mock_llm, generator, sample_skill, sample_problem):
         """Test generating code with LLM."""
         mock_llm.return_value = "generated_code"
-        code = generator.generate(sample_skill, sample_problem, method="llm")
+        generator.generate(sample_skill, sample_problem, method="llm")
         mock_llm.assert_called_once()
 
     def test_add_imports(self, generator):
@@ -231,13 +231,13 @@ class TestCodeValidator:
     def test_validate_imports_invalid(self, validator):
         """Test validating invalid imports."""
         code = "import nonexistent_module"
-        result = validator.validate_imports(code, check_available=True)
+        validator.validate_imports(code, check_available=True)
         # Should flag the invalid import
 
     def test_validate_style(self, validator):
         """Test validating code style."""
         code = "x=1+2  # No spaces around operators"
-        result = validator.validate_style(code)
+        validator.validate_style(code)
         # Should detect style issues
 
     def test_validate_complete(self, validator):
