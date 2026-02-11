@@ -1,7 +1,6 @@
 """Display utilities for CLI output."""
 
 import logging
-from typing import List, Optional
 
 from rich.console import Console
 from rich.table import Table
@@ -22,7 +21,7 @@ console = Console()
 class RecommendationDisplay:
     """Display utilities for recommendation results."""
 
-    def __init__(self, console: Optional[Console] = None):
+    def __init__(self, console: Console | None = None):
         """Initialize display.
 
         Args:
@@ -31,7 +30,7 @@ class RecommendationDisplay:
         self.console = console or Console()
 
     def show_recommendations(
-        self, recommendations: List[Recommendation], show_details: bool = False
+        self, recommendations: list[Recommendation], show_details: bool = False
     ):
         """Display recommendations.
 
@@ -113,7 +112,7 @@ class RecommendationDisplay:
             Panel(panel_content, title="Recommendation Details", border_style="cyan")
         )
 
-    def show_match_results(self, match_results: List[MatchResult]):
+    def show_match_results(self, match_results: list[MatchResult]):
         """Show match results.
 
         Args:
@@ -204,7 +203,7 @@ class RecommendationDisplay:
         syntax = Syntax(code, language, theme="monokai", line_numbers=True)
         self.console.print(Panel(syntax, title="Generated Code", border_style="cyan"))
 
-    def show_comparison(self, recommendations: List[Recommendation]):
+    def show_comparison(self, recommendations: list[Recommendation]):
         """Show comparison between recommendations.
 
         Args:
@@ -235,7 +234,7 @@ Confidence: {rec.confidence:.2f}
         self.console.print(columns)
 
     def show_problem_analysis(
-        self, problem_summary: str, problem_type: str, data_types: List[str], constraints: List[str]
+        self, problem_summary: str, problem_type: str, data_types: list[str], constraints: list[str]
     ):
         """Display problem analysis results.
 
@@ -279,7 +278,7 @@ Confidence: {rec.confidence:.2f}
         )
         self.console.print()
 
-    def show_error(self, message: str, details: Optional[str] = None):
+    def show_error(self, message: str, details: str | None = None):
         """Display error message.
 
         Args:

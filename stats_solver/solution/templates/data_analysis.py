@@ -1,6 +1,6 @@
 """Template for data analysis tasks."""
 
-from typing import Dict, Any
+from typing import Any
 from .base import BaseTemplate
 
 
@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
         return self.TEMPLATE.format(**variables)
 
-    def _get_params(self, kwargs: Dict[str, Any]) -> str:
+    def _get_params(self, kwargs: dict[str, Any]) -> str:
         """Get function parameters.
 
         Args:
@@ -80,7 +80,7 @@ if __name__ == "__main__":
         """
         return "data, *args, **kwargs"
 
-    def _get_param_docs(self, kwargs: Dict[str, Any]) -> str:
+    def _get_param_docs(self, kwargs: dict[str, Any]) -> str:
         """Get parameter documentation.
 
         Args:
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     **kwargs : additional keyword arguments
         Additional keyword arguments"""
 
-    def _get_data_loading(self, kwargs: Dict[str, Any]) -> str:
+    def _get_data_loading(self, kwargs: dict[str, Any]) -> str:
         """Get data loading code.
 
         Args:
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     if df.empty:
         raise ValueError("Data cannot be empty")"""
 
-    def _get_implementation(self, kwargs: Dict[str, Any]) -> str:
+    def _get_implementation(self, kwargs: dict[str, Any]) -> str:
         """Get implementation code.
 
         Args:
@@ -128,7 +128,7 @@ if __name__ == "__main__":
         'columns': df.columns.tolist()
     }}"""
 
-    def _get_return_value(self, kwargs: Dict[str, Any]) -> str:
+    def _get_return_value(self, kwargs: dict[str, Any]) -> str:
         """Get return value expression.
 
         Args:

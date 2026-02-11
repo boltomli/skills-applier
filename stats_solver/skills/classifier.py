@@ -1,7 +1,6 @@
 """Skill classifier for categorizing skills."""
 
 import logging
-from typing import List, Optional, Set
 
 from .metadata_schema import SkillMetadata, SkillCategory, DataType
 from ..llm.base import LLMProvider
@@ -165,7 +164,7 @@ class SkillClassifier:
         },
     }
 
-    def __init__(self, use_llm: bool = False, llm_provider: Optional[LLMProvider] = None) -> None:
+    def __init__(self, use_llm: bool = False, llm_provider: LLMProvider | None = None) -> None:
         """Initialize skill classifier.
 
         Args:
@@ -303,7 +302,7 @@ Return a JSON object with:
 - statistical_concept: The main statistical concept if applicable (e.g., "hypothesis_testing", "regression"), or null
 - confidence: Your confidence in this classification (0.0 to 1.0)"""
 
-    def _extract_data_types(self, text: str) -> List[DataType]:
+    def _extract_data_types(self, text: str) -> list[DataType]:
         """Extract data types from text.
 
         Args:
@@ -312,7 +311,7 @@ Return a JSON object with:
         Returns:
             List of detected data types
         """
-        detected_types: Set[DataType] = set()
+        detected_types: set[DataType] = set()
 
         for data_type, keywords in self.DATA_TYPE_KEYWORDS.items():
             if any(kw in text for kw in keywords):
@@ -327,7 +326,7 @@ Return a JSON object with:
             # Default to numerical if no specific type detected
             return [DataType.NUMERICAL]
 
-    async def batch_classify(self, skills: List[SkillMetadata]) -> List[SkillMetadata]:
+    async def batch_classify(self, skills: list[SkillMetadata]) -> list[SkillMetadata]:
         """Classify multiple skills.
 
         Args:

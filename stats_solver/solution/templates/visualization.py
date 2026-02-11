@@ -1,6 +1,6 @@
 """Template for visualization tasks."""
 
-from typing import Dict, Any
+from typing import Any
 from .base import BaseTemplate
 
 
@@ -74,7 +74,7 @@ if __name__ == "__main__":
 
         return self.TEMPLATE.format(**variables)
 
-    def _get_params(self, kwargs: Dict[str, Any]) -> str:
+    def _get_params(self, kwargs: dict[str, Any]) -> str:
         """Get function parameters.
 
         Args:
@@ -85,7 +85,7 @@ if __name__ == "__main__":
         """
         return "data, title=None, xlabel=None, ylabel=None, **kwargs"
 
-    def _get_param_docs(self, kwargs: Dict[str, Any]) -> str:
+    def _get_param_docs(self, kwargs: dict[str, Any]) -> str:
         """Get parameter documentation.
 
         Args:
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     **kwargs : additional keyword arguments
         Additional keyword arguments for plotting"""
 
-    def _get_data_preparation(self, kwargs: Dict[str, Any]) -> str:
+    def _get_data_preparation(self, kwargs: dict[str, Any]) -> str:
         """Get data preparation code.
 
         Args:
@@ -121,7 +121,7 @@ if __name__ == "__main__":
     else:
         x, y = data.T"""
 
-    def _get_plot_code(self, kwargs: Dict[str, Any]) -> str:
+    def _get_plot_code(self, kwargs: dict[str, Any]) -> str:
         """Get plot creation code.
 
         Args:
@@ -133,7 +133,7 @@ if __name__ == "__main__":
         return """ax.plot(x, y, **kwargs)
     ax.grid(True, alpha=0.3)"""
 
-    def _get_customization(self, kwargs: Dict[str, Any]) -> str:
+    def _get_customization(self, kwargs: dict[str, Any]) -> str:
         """Get plot customization code.
 
         Args:

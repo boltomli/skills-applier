@@ -1,7 +1,6 @@
 """Problem type classifier for categorizing user problems."""
 
 import logging
-from typing import List, Dict, Optional
 from enum import Enum
 
 from pydantic import BaseModel
@@ -59,10 +58,10 @@ class ProblemClassificationResult(BaseModel):
     """Result of problem classification."""
 
     primary_type: ProblemType
-    subtypes: List[ProblemType]
+    subtypes: list[ProblemType]
     confidence: float
     reasoning: str
-    related_types: List[ProblemType]
+    related_types: list[ProblemType]
     complexity_level: str  # simple, moderate, complex
 
 
@@ -227,7 +226,7 @@ class ProblemClassifier:
         ],
     }
 
-    def __init__(self, use_llm: bool = False, llm_provider: Optional[LLMProvider] = None) -> None:
+    def __init__(self, use_llm: bool = False, llm_provider: LLMProvider | None = None) -> None:
         """Initialize problem classifier.
 
         Args:
@@ -238,7 +237,7 @@ class ProblemClassifier:
         self.llm_provider = llm_provider
 
     async def classify(
-        self, text: str, data_type_result: Optional[DataTypeDetectionResult] = None
+        self, text: str, data_type_result: DataTypeDetectionResult | None = None
     ) -> ProblemClassificationResult:
         """Classify the problem type.
 
@@ -255,7 +254,7 @@ class ProblemClassifier:
             return self._classify_with_rules(text, data_type_result)
 
     def _classify_with_rules(
-        self, text: str, data_type_result: Optional[DataTypeDetectionResult] = None
+        self, text: str, data_type_result: DataTypeDetectionResult | None = None
     ) -> ProblemClassificationResult:
         """Classify using rule-based approach.
 
@@ -306,7 +305,7 @@ class ProblemClassifier:
         )
 
     async def _classify_with_llm(
-        self, text: str, data_type_result: Optional[DataTypeDetectionResult] = None
+        self, text: str, data_type_result: DataTypeDetectionResult | None = None
     ) -> ProblemClassificationResult:
         """Classify using LLM.
 
@@ -356,8 +355,8 @@ Return a JSON object with:
             return self._classify_with_rules(text, data_type_result)
 
     def _find_subtypes(
-        self, primary_type: ProblemType, scores: Dict[ProblemType, float]
-    ) -> List[ProblemType]:
+        self, primary_type: ProblemType, scores: dict[ProblemType, float]
+    ) -> list[ProblemType]:
         """Find subtypes of the primary type.
 
         Args:
@@ -379,8 +378,8 @@ Return a JSON object with:
         return subtypes
 
     def _find_related_types(
-        self, primary_type: ProblemType, scores: Dict[ProblemType, float]
-    ) -> List[ProblemType]:
+        self, primary_type: ProblemType, scores: dict[ProblemType, float]
+    ) -> list[ProblemType]:
         """Find related problem types.
 
         Args:
@@ -431,8 +430,8 @@ Return a JSON object with:
     def _generate_reasoning(
         self,
         primary_type: ProblemType,
-        subtypes: List[ProblemType],
-        scores: Dict[ProblemType, float],
+        subtypes: list[ProblemType],
+        scores: dict[ProblemType, float],
     ) -> str:
         """Generate reasoning for the classification.
 
@@ -461,7 +460,7 @@ Return a JSON object with:
 
         return ". ".join(reasoning_parts)
 
-    def _calculate_confidence(self, scores: Dict[ProblemType, float]) -> float:
+    def _calculate_confidence(self, scores: dict[ProblemType, float]) -> float:
         """Calculate confidence in the classification.
 
         Args:

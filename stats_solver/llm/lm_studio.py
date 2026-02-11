@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 import httpx
 
 from .base import LLMProvider, LLMConfig, LLMResponse
@@ -17,7 +17,7 @@ class LMStudioProvider(LLMProvider):
     def __init__(self, config: LLMConfig) -> None:
         """Initialize LM Studio provider."""
         super().__init__(config)
-        self._http_client: Optional[httpx.AsyncClient] = None
+        self._http_client: httpx.AsyncClient | None = None
 
     @property
     def is_available(self) -> bool:
@@ -48,7 +48,7 @@ class LMStudioProvider(LLMProvider):
             self._http_client = None
             logger.info("Disconnected from LM Studio")
 
-    async def list_models(self) -> List[str]:
+    async def list_models(self) -> list[str]:
         """List available LM Studio models."""
         if not self._http_client:
             raise RuntimeError("Not connected to LM Studio")
@@ -65,9 +65,9 @@ class LMStudioProvider(LLMProvider):
     async def generate(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
+        system_prompt: str | None = None,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
         **kwargs: Any,
     ) -> LLMResponse:
         """Generate text from LM Studio using chat completion API."""
@@ -86,9 +86,9 @@ class LMStudioProvider(LLMProvider):
     async def generate_json(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         **kwargs: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate JSON response from LM Studio."""
         # Add JSON formatting instruction to system prompt
         json_instruction = "You must respond with valid JSON only. Do not include any explanation or markdown formatting."
@@ -118,9 +118,9 @@ class LMStudioProvider(LLMProvider):
 
     async def chat(
         self,
-        messages: List[Dict[str, str]],
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
+        messages: list[dict[str, str]],
+        temperature: float | None = None,
+        max_tokens: int | None = None,
         **kwargs: Any,
     ) -> LLMResponse:
         """Generate response from chat messages using LM Studio."""
@@ -130,9 +130,9 @@ class LMStudioProvider(LLMProvider):
 
     async def _send_chat_request(
         self,
-        messages: List[Dict[str, str]],
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
+        messages: list[dict[str, str]],
+        temperature: float | None = None,
+        max_tokens: int | None = None,
         **kwargs: Any,
     ) -> LLMResponse:
         """Send chat completion request to LM Studio."""

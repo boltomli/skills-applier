@@ -1,7 +1,7 @@
 """Prerequisite checker for skill dependencies."""
 
 import logging
-from typing import List, Dict, Optional, Any
+from typing import Any
 from dataclasses import dataclass
 from enum import Enum
 
@@ -37,10 +37,10 @@ class PrerequisiteCheckResult:
 
     skill: SkillMetadata
     all_satisfied: bool
-    prerequisites: List[Prerequisite]
+    prerequisites: list[Prerequisite]
     missing_count: int
     satisfied_count: int
-    warning_message: Optional[str] = None
+    warning_message: str | None = None
 
 
 class PrerequisiteChecker:
@@ -55,7 +55,7 @@ class PrerequisiteChecker:
         self.skill_index = skill_index
 
     async def check_prerequisites(
-        self, skill: SkillMetadata, available_skills: Optional[List[SkillMetadata]] = None
+        self, skill: SkillMetadata, available_skills: list[SkillMetadata] | None = None
     ) -> PrerequisiteCheckResult:
         """Check if a skill's prerequisites are satisfied.
 
@@ -116,7 +116,7 @@ class PrerequisiteChecker:
         )
 
     def _check_single_prerequisite(
-        self, prereq_id: str, available_map: Dict[str, SkillMetadata]
+        self, prereq_id: str, available_map: dict[str, SkillMetadata]
     ) -> Prerequisite:
         """Check a single prerequisite.
 
@@ -157,8 +157,8 @@ class PrerequisiteChecker:
                 )
 
     def _infer_implicit_prerequisites(
-        self, skill: SkillMetadata, available_skills: List[SkillMetadata]
-    ) -> List[str]:
+        self, skill: SkillMetadata, available_skills: list[SkillMetadata]
+    ) -> list[str]:
         """Infer implicit prerequisites based on skill characteristics.
 
         Args:
@@ -209,8 +209,8 @@ class PrerequisiteChecker:
         return implicit
 
     def _find_similar_skills(
-        self, prereq_id: str, available_map: Dict[str, SkillMetadata]
-    ) -> List[str]:
+        self, prereq_id: str, available_map: dict[str, SkillMetadata]
+    ) -> list[str]:
         """Find skills similar to the prerequisite.
 
         Args:
@@ -231,8 +231,8 @@ class PrerequisiteChecker:
         return similar[:3]
 
     async def check_batch(
-        self, skills: List[SkillMetadata], available_skills: Optional[List[SkillMetadata]] = None
-    ) -> List[PrerequisiteCheckResult]:
+        self, skills: list[SkillMetadata], available_skills: list[SkillMetadata] | None = None
+    ) -> list[PrerequisiteCheckResult]:
         """Check prerequisites for multiple skills.
 
         Args:
@@ -251,8 +251,8 @@ class PrerequisiteChecker:
         return results
 
     def get_missing_prerequisites(
-        self, results: List[PrerequisiteCheckResult]
-    ) -> Dict[str, List[Prerequisite]]:
+        self, results: list[PrerequisiteCheckResult]
+    ) -> dict[str, list[Prerequisite]]:
         """Get all missing prerequisites across results.
 
         Args:
@@ -274,10 +274,10 @@ class PrerequisiteChecker:
 
     def filter_by_prerequisites(
         self,
-        skills: List[SkillMetadata],
-        available_skills: Optional[List[SkillMetadata]] = None,
+        skills: list[SkillMetadata],
+        available_skills: list[SkillMetadata] | None = None,
         require_all: bool = False,
-    ) -> List[SkillMetadata]:
+    ) -> list[SkillMetadata]:
         """Filter skills by prerequisite satisfaction.
 
         Args:
@@ -305,7 +305,7 @@ class PrerequisiteChecker:
         return filtered
 
     def check_prerequisites_sync(
-        self, skill: SkillMetadata, available_skills: Optional[List[SkillMetadata]] = None
+        self, skill: SkillMetadata, available_skills: list[SkillMetadata] | None = None
     ) -> PrerequisiteCheckResult:
         """Synchronous version of check_prerequisites.
 
@@ -348,8 +348,8 @@ class PrerequisiteChecker:
         )
 
     def generate_prerequisite_report(
-        self, results: List[PrerequisiteCheckResult]
-    ) -> Dict[str, Any]:
+        self, results: list[PrerequisiteCheckResult]
+    ) -> dict[str, Any]:
         """Generate a summary report of prerequisite checks.
 
         Args:

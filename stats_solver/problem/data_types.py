@@ -1,7 +1,7 @@
 """Data type detection for problem analysis."""
 
 import logging
-from typing import List, Dict, Optional, Any
+from typing import Any
 import re
 
 from pydantic import BaseModel
@@ -15,9 +15,9 @@ class DataTypeDetectionResult(BaseModel):
     """Result of data type detection."""
 
     primary_type: DataType
-    secondary_types: List[DataType]
+    secondary_types: list[DataType]
     confidence: float
-    evidence: List[str]
+    evidence: list[str]
     mixed_type: bool = False
 
 
@@ -58,7 +58,7 @@ class DataTypeDetector:
         "outcomes": [r"success/failure", r"pass/fail", r"positive/negative"],
     }
 
-    def __init__(self, use_llm: bool = False, llm_provider: Optional[Any] = None) -> None:
+    def __init__(self, use_llm: bool = False, llm_provider: Any | None = None) -> None:
         """Initialize data type detector.
 
         Args:
@@ -244,7 +244,7 @@ Return a JSON object with:
             score += matches * 0.5
         return min(score, 1.0)
 
-    def _collect_evidence(self, text: str) -> List[str]:
+    def _collect_evidence(self, text: str) -> list[str]:
         """Collect evidence phrases from text.
 
         Args:
@@ -275,7 +275,7 @@ Return a JSON object with:
 
         return list(set(evidence))[:5]
 
-    def _calculate_confidence(self, scores: Dict[DataType, float]) -> float:
+    def _calculate_confidence(self, scores: dict[DataType, float]) -> float:
         """Calculate confidence in the detection.
 
         Args:
@@ -297,7 +297,7 @@ Return a JSON object with:
         # Confidence based on how dominant the top score is
         return max_score / sum_scores
 
-    def detect_batch(self, texts: List[str]) -> List[DataTypeDetectionResult]:
+    def detect_batch(self, texts: list[str]) -> list[DataTypeDetectionResult]:
         """Detect data types for multiple texts.
 
         Args:

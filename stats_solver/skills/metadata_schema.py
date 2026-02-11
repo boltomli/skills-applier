@@ -1,7 +1,7 @@
 """Skill metadata JSON schema definitions."""
 
 from enum import Enum
-from typing import List, Optional, Dict, Any
+from typing import Any
 from pydantic import BaseModel, Field
 
 
@@ -36,48 +36,46 @@ class SkillMetadata(BaseModel):
 
     # Classification
     category: SkillCategory = Field(..., description="Primary skill category")
-    tags: List[str] = Field(default_factory=list, description="Descriptive tags")
+    tags: list[str] = Field(default_factory=list, description="Descriptive tags")
 
     # Data capabilities
-    input_data_types: List[DataType] = Field(
+    input_data_types: list[DataType] = Field(
         default_factory=list, description="Data types this skill can accept as input"
     )
-    output_format: Optional[str] = Field(
+    output_format: str | None = Field(
         None, description="Format of output (e.g., 'plot', 'table', 'number')"
     )
 
     # Description
     description: str = Field(..., description="Brief description of what the skill does")
-    long_description: Optional[str] = Field(None, description="Detailed description of the skill")
+    long_description: str | None = Field(None, description="Detailed description of the skill")
 
     # Dependencies
-    dependencies: List[str] = Field(
+    dependencies: list[str] = Field(
         default_factory=list, description="Python dependencies required"
     )
 
     # Prerequisites
-    prerequisites: List[str] = Field(
+    prerequisites: list[str] = Field(
         default_factory=list, description="Other skills that should be used before this one"
     )
 
     # Use cases
-    use_cases: List[str] = Field(
+    use_cases: list[str] = Field(
         default_factory=list, description="Example use cases or problem scenarios"
     )
 
     # Statistical context (for statistical methods)
-    statistical_concept: Optional[str] = Field(
+    statistical_concept: str | None = Field(
         None, description="Statistical concept (e.g., 'hypothesis_testing', 'regression')"
     )
-    assumptions: List[str] = Field(
+    assumptions: list[str] = Field(
         default_factory=list, description="Statistical assumptions the skill relies on"
     )
 
     # Algorithm context (for mathematical implementations)
-    algorithm_name: Optional[str] = Field(None, description="Name of the algorithm implemented")
-    complexity: Optional[str] = Field(
-        None, description="Time/space complexity (e.g., 'O(n log n)')"
-    )
+    algorithm_name: str | None = Field(None, description="Name of the algorithm implemented")
+    complexity: str | None = Field(None, description="Time/space complexity (e.g., 'O(n log n)')")
 
     # Additional metadata
     confidence: float = Field(
@@ -86,10 +84,10 @@ class SkillMetadata(BaseModel):
     source: str = Field(
         default="manual", description="Source of metadata ('manual', 'llm', 'hybrid')"
     )
-    last_updated: Optional[str] = Field(None, description="ISO timestamp of last update")
+    last_updated: str | None = Field(None, description="ISO timestamp of last update")
 
     # Custom fields
-    custom_fields: Dict[str, Any] = Field(
+    custom_fields: dict[str, Any] = Field(
         default_factory=dict, description="Additional custom metadata fields"
     )
 
@@ -122,10 +120,10 @@ class SkillMetadata(BaseModel):
 class SkillIndexMetadata(BaseModel):
     """Metadata for the entire skill index."""
 
-    skills: List[SkillMetadata] = Field(
+    skills: list[SkillMetadata] = Field(
         default_factory=list, description="List of all indexed skills"
     )
-    categories: Dict[str, int] = Field(
+    categories: dict[str, int] = Field(
         default_factory=dict, description="Count of skills per category"
     )
     last_updated: str = Field(..., description="ISO timestamp of last index update")
@@ -144,15 +142,15 @@ class SkillIndexMetadata(BaseModel):
             cat = skill.category.value
             self.categories[cat] = self.categories.get(cat, 0) + 1
 
-    def get_by_category(self, category: SkillCategory) -> List[SkillMetadata]:
+    def get_by_category(self, category: SkillCategory) -> list[SkillMetadata]:
         """Get all skills in a category."""
         return [s for s in self.skills if s.category == category]
 
-    def get_by_tag(self, tag: str) -> List[SkillMetadata]:
+    def get_by_tag(self, tag: str) -> list[SkillMetadata]:
         """Get all skills with a specific tag."""
         return [s for s in self.skills if tag in s.tags]
 
-    def search(self, query: str) -> List[SkillMetadata]:
+    def search(self, query: str) -> list[SkillMetadata]:
         """Search skills by name, description, or tags."""
         query = query.lower()
         results = []

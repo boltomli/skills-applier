@@ -1,7 +1,7 @@
 """Sample data generator for testing and examples."""
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Any
 from dataclasses import dataclass
 from enum import Enum
 import random
@@ -28,13 +28,13 @@ class SampleData:
     description: str
     data_type: DataType
     size: int
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 class SampleDataGenerator:
     """Generator for sample data for testing and examples."""
 
-    def __init__(self, seed: Optional[int] = None) -> None:
+    def __init__(self, seed: int | None = None) -> None:
         """Initialize sample data generator.
 
         Args:
@@ -47,7 +47,7 @@ class SampleDataGenerator:
         self,
         data_type: DataType,
         size: SampleDataSize = SampleDataSize.SMALL,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> SampleData:
         """Generate sample data.
 
@@ -91,7 +91,7 @@ class SampleDataGenerator:
         }
         return sizes[size]
 
-    def _generate_numerical(self, n: int, context: Optional[Dict[str, Any]]) -> SampleData:
+    def _generate_numerical(self, n: int, context: dict[str, Any] | None) -> SampleData:
         """Generate numerical sample data.
 
         Args:
@@ -118,7 +118,7 @@ class SampleDataGenerator:
             },
         )
 
-    def _generate_categorical(self, n: int, context: Optional[Dict[str, Any]]) -> SampleData:
+    def _generate_categorical(self, n: int, context: dict[str, Any] | None) -> SampleData:
         """Generate categorical sample data.
 
         Args:
@@ -144,7 +144,7 @@ class SampleDataGenerator:
             },
         )
 
-    def _generate_time_series(self, n: int, context: Optional[Dict[str, Any]]) -> SampleData:
+    def _generate_time_series(self, n: int, context: dict[str, Any] | None) -> SampleData:
         """Generate time series sample data.
 
         Args:
@@ -173,7 +173,7 @@ class SampleDataGenerator:
             },
         )
 
-    def _generate_boolean(self, n: int, context: Optional[Dict[str, Any]]) -> SampleData:
+    def _generate_boolean(self, n: int, context: dict[str, Any] | None) -> SampleData:
         """Generate boolean sample data.
 
         Args:
@@ -198,7 +198,7 @@ class SampleDataGenerator:
             },
         )
 
-    def _generate_mixed(self, n: int, context: Optional[Dict[str, Any]]) -> SampleData:
+    def _generate_mixed(self, n: int, context: dict[str, Any] | None) -> SampleData:
         """Generate mixed sample data.
 
         Args:
@@ -254,7 +254,7 @@ class SampleDataGenerator:
 
     def generate_two_sample_data(
         self, size: SampleDataSize = SampleDataSize.SMALL, effect_size: float = 0.5
-    ) -> Dict[str, SampleData]:
+    ) -> dict[str, SampleData]:
         """Generate two sample datasets for comparison.
 
         Args:

@@ -1,7 +1,6 @@
 """Docstring generator for generated code."""
 
 import logging
-from typing import Optional, Dict
 
 from ..skills.metadata_schema import SkillMetadata
 from ..llm.base import LLMProvider
@@ -12,7 +11,7 @@ logger = logging.getLogger(__name__)
 class DocstringGenerator:
     """Generator for Python docstrings."""
 
-    def __init__(self, llm_provider: Optional[LLMProvider] = None) -> None:
+    def __init__(self, llm_provider: LLMProvider | None = None) -> None:
         """Initialize docstring generator.
 
         Args:
@@ -21,7 +20,7 @@ class DocstringGenerator:
         self.llm_provider = llm_provider
 
     def generate(
-        self, skill: SkillMetadata, problem_description: Optional[str] = None, use_llm: bool = False
+        self, skill: SkillMetadata, problem_description: str | None = None, use_llm: bool = False
     ) -> str:
         """Generate a docstring for a skill.
 
@@ -39,7 +38,7 @@ class DocstringGenerator:
             return self._generate_with_template(skill, problem_description)
 
     def _generate_with_template(
-        self, skill: SkillMetadata, problem_description: Optional[str] = None
+        self, skill: SkillMetadata, problem_description: str | None = None
     ) -> str:
         """Generate docstring using template.
 
@@ -100,7 +99,7 @@ class DocstringGenerator:
         return "\n".join(lines)
 
     async def _generate_with_llm(
-        self, skill: SkillMetadata, problem_description: Optional[str] = None
+        self, skill: SkillMetadata, problem_description: str | None = None
     ) -> str:
         """Generate docstring using LLM.
 
@@ -129,7 +128,7 @@ class DocstringGenerator:
             return self._generate_with_template(skill, problem_description)
 
     def _build_generation_prompt(
-        self, skill: SkillMetadata, problem_description: Optional[str] = None
+        self, skill: SkillMetadata, problem_description: str | None = None
     ) -> str:
         """Build docstring generation prompt.
 
@@ -185,10 +184,10 @@ class DocstringGenerator:
     def generate_function_docstring(
         self,
         function_name: str,
-        parameters: Dict[str, str],
+        parameters: dict[str, str],
         returns: str,
         description: str,
-        examples: Optional[list[str]] = None,
+        examples: list[str] | None = None,
     ) -> str:
         """Generate a docstring for a specific function.
 
@@ -234,8 +233,8 @@ class DocstringGenerator:
         self,
         module_name: str,
         description: str,
-        classes: Optional[Dict[str, str]] = None,
-        functions: Optional[Dict[str, str]] = None,
+        classes: dict[str, str] | None = None,
+        functions: dict[str, str] | None = None,
     ) -> str:
         """Generate a module-level docstring.
 

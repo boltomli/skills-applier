@@ -2,7 +2,6 @@
 
 import logging
 from pathlib import Path
-from typing import List, Set
 import re
 
 from .metadata_schema import SkillMetadata, SkillCategory
@@ -36,16 +35,16 @@ class SkillScanner:
         r"_test\.py$",
     }
 
-    def __init__(self, base_paths: List[str]) -> None:
+    def __init__(self, base_paths: list[str]) -> None:
         """Initialize skill scanner.
 
         Args:
             base_paths: List of base directory paths to scan for skills
         """
         self.base_paths = [Path(p).resolve() for p in base_paths]
-        self._scanned_skills: List[SkillMetadata] = []
+        self._scanned_skills: list[SkillMetadata] = []
 
-    def scan_all(self) -> List[SkillMetadata]:
+    def scan_all(self) -> list[SkillMetadata]:
         """Scan all base paths for skills.
 
         Returns:
@@ -65,7 +64,7 @@ class SkillScanner:
         logger.info(f"Scanned {len(self._scanned_skills)} skills total")
         return self._scanned_skills
 
-    def _scan_directory(self, directory: Path) -> List[SkillMetadata]:
+    def _scan_directory(self, directory: Path) -> list[SkillMetadata]:
         """Scan a directory for skills.
 
         Args:
@@ -90,7 +89,7 @@ class SkillScanner:
 
         return skills
 
-    def _find_python_files(self, directory: Path) -> List[Path]:
+    def _find_python_files(self, directory: Path) -> list[Path]:
         """Find Python files in a directory.
 
         Args:
@@ -125,7 +124,7 @@ class SkillScanner:
                 return True
         return False
 
-    def _create_basic_metadata(self, directory: Path, python_files: List[Path]) -> SkillMetadata:
+    def _create_basic_metadata(self, directory: Path, python_files: list[Path]) -> SkillMetadata:
         """Create basic metadata for a skill from its files.
 
         Args:
@@ -152,7 +151,7 @@ class SkillScanner:
             source="scanner",
         )
 
-    def _extract_dependencies(self, python_files: List[Path]) -> List[str]:
+    def _extract_dependencies(self, python_files: list[Path]) -> list[str]:
         """Extract Python dependencies from files.
 
         Args:
@@ -161,7 +160,7 @@ class SkillScanner:
         Returns:
             List of dependency names
         """
-        dependencies: Set[str] = set()
+        dependencies: set[str] = set()
 
         for file_path in python_files:
             try:
@@ -189,7 +188,7 @@ class SkillScanner:
         name = skill_id.replace("-", " ").replace("_", " ")
         return " ".join(word.capitalize() for word in name.split())
 
-    def get_scanned_skills(self) -> List[SkillMetadata]:
+    def get_scanned_skills(self) -> list[SkillMetadata]:
         """Get list of scanned skills.
 
         Returns:

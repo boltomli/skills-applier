@@ -2,7 +2,6 @@
 
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional
 
 from .metadata_schema import SkillMetadata, SkillCategory, DataType
 from ..llm.base import LLMProvider
@@ -22,7 +21,7 @@ class LLMMetadataExtractor:
         self.llm_provider = llm_provider
 
     async def extract_metadata(
-        self, skill_path: Path, basic_metadata: Optional[SkillMetadata] = None
+        self, skill_path: Path, basic_metadata: SkillMetadata | None = None
     ) -> SkillMetadata:
         """Extract full metadata from a skill directory.
 
@@ -146,7 +145,7 @@ Return a JSON object with the following fields:
 - complexity: Time/space complexity if applicable (e.g., "O(n log n)") or null
 - confidence: Your confidence in this extraction (0.0 to 1.0)"""
 
-    def _update_metadata_from_result(self, metadata: SkillMetadata, result: Dict) -> None:
+    def _update_metadata_from_result(self, metadata: SkillMetadata, result: dict) -> None:
         """Update metadata with extraction result.
 
         Args:
@@ -212,7 +211,7 @@ Return a JSON object with the following fields:
         if "complexity" in result:
             metadata.complexity = result["complexity"]
 
-    async def batch_extract(self, skill_paths: List[Path]) -> List[SkillMetadata]:
+    async def batch_extract(self, skill_paths: list[Path]) -> list[SkillMetadata]:
         """Extract metadata for multiple skills.
 
         Args:

@@ -1,7 +1,7 @@
 """Interactive mode for the CLI."""
 
 import logging
-from typing import Optional, Dict, Any
+from typing import Any
 from dataclasses import dataclass
 
 from rich.console import Console
@@ -19,10 +19,10 @@ class SessionState:
     """State for an interactive session."""
 
     conversation_history: list[dict]
-    current_problem: Optional[str]
+    current_problem: str | None
     recommended_skills: list[Any]
-    generated_code: Optional[str]
-    user_preferences: Dict[str, Any]
+    generated_code: str | None
+    user_preferences: dict[str, Any]
 
     def __init__(self):
         self.conversation_history = []
@@ -268,7 +268,7 @@ I've identified the following:
             console.print("[cyan]Ready for your next problem![/cyan]")
             self.state.current_problem = None
 
-    def get_session_summary(self) -> Dict[str, Any]:
+    def get_session_summary(self) -> dict[str, Any]:
         """Get summary of the current session.
 
         Returns:

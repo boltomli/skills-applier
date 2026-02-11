@@ -1,7 +1,6 @@
 """Skills browsing and management commands."""
 
 import logging
-from typing import List, Optional
 from pathlib import Path
 
 from rich.console import Console
@@ -19,7 +18,7 @@ console = Console()
 class SkillsBrowser:
     """Browser for viewing and managing skills."""
 
-    def __init__(self, skill_index: Optional[SkillIndex] = None):
+    def __init__(self, skill_index: SkillIndex | None = None):
         """Initialize skills browser.
 
         Args:
@@ -49,8 +48,8 @@ class SkillsBrowser:
             return False
 
     def list_all(
-        self, category: Optional[SkillCategory] = None, tag: Optional[str] = None, limit: int = 50
-    ) -> List[SkillMetadata]:
+        self, category: SkillCategory | None = None, tag: str | None = None, limit: int = 50
+    ) -> list[SkillMetadata]:
         """List skills with optional filtering.
 
         Args:
@@ -74,7 +73,7 @@ class SkillsBrowser:
         # Limit results
         return skills[:limit]
 
-    def search(self, query: str, limit: int = 50) -> List[SkillMetadata]:
+    def search(self, query: str, limit: int = 50) -> list[SkillMetadata]:
         """Search skills by query.
 
         Args:
@@ -86,7 +85,7 @@ class SkillsBrowser:
         """
         return self.skill_index.search(query)[:limit]
 
-    def display_skills(self, skills: List[SkillMetadata], show_details: bool = False):
+    def display_skills(self, skills: list[SkillMetadata], show_details: bool = False):
         """Display skills in a table.
 
         Args:
@@ -239,7 +238,7 @@ class SkillsBrowser:
 
         console.print(Panel(panel_content, title="Skill Statistics", border_style="cyan"))
 
-    def get_skill_by_id(self, skill_id: str) -> Optional[SkillMetadata]:
+    def get_skill_by_id(self, skill_id: str) -> SkillMetadata | None:
         """Get a skill by ID.
 
         Args:
@@ -250,7 +249,7 @@ class SkillsBrowser:
         """
         return self.skill_index.get_skill(skill_id)
 
-    def get_skills_by_category(self, category: SkillCategory) -> List[SkillMetadata]:
+    def get_skills_by_category(self, category: SkillCategory) -> list[SkillMetadata]:
         """Get all skills in a category.
 
         Args:
@@ -261,7 +260,7 @@ class SkillsBrowser:
         """
         return self.skill_index.get_by_category(category)
 
-    def get_skills_by_tag(self, tag: str) -> List[SkillMetadata]:
+    def get_skills_by_tag(self, tag: str) -> list[SkillMetadata]:
         """Get all skills with a tag.
 
         Args:
@@ -272,9 +271,7 @@ class SkillsBrowser:
         """
         return self.skill_index.get_by_tag(tag)
 
-    def export_skills(
-        self, output_file: Path, skills: Optional[List[SkillMetadata]] = None
-    ) -> bool:
+    def export_skills(self, output_file: Path, skills: list[SkillMetadata] | None = None) -> bool:
         """Export skills to a file.
 
         Args:

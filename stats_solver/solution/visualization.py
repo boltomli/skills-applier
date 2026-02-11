@@ -1,7 +1,7 @@
 """Visualization code generator."""
 
 import logging
-from typing import Dict, List, Optional, Any
+from typing import Any
 from dataclasses import dataclass
 from enum import Enum
 
@@ -31,13 +31,13 @@ class VisualizationSpec:
 
     plot_type: PlotType
     data_param: str
-    x_param: Optional[str] = None
-    y_param: Optional[str] = None
-    title: Optional[str] = None
-    xlabel: Optional[str] = None
-    ylabel: Optional[str] = None
+    x_param: str | None = None
+    y_param: str | None = None
+    title: str | None = None
+    xlabel: str | None = None
+    ylabel: str | None = None
     figsize: tuple = (10, 6)
-    color: Optional[str] = None
+    color: str | None = None
     grid: bool = True
     legend: bool = False
 
@@ -49,8 +49,8 @@ class GeneratedVisualization:
     code: str
     description: str
     plot_type: PlotType
-    libraries: List[str]
-    metadata: Dict[str, Any]
+    libraries: list[str]
+    metadata: dict[str, Any]
 
 
 class VisualizationGenerator:
@@ -65,7 +65,7 @@ class VisualizationGenerator:
         OutputFormat.HEATMAP: PlotType.HEATMAP,
     }
 
-    def __init__(self, llm_provider: Optional[LLMProvider] = None) -> None:
+    def __init__(self, llm_provider: LLMProvider | None = None) -> None:
         """Initialize visualization generator.
 
         Args:
@@ -77,7 +77,7 @@ class VisualizationGenerator:
         self,
         skill: SkillMetadata,
         output_format: OutputFormat,
-        data_description: Optional[str] = None,
+        data_description: str | None = None,
         use_llm: bool = False,
     ) -> GeneratedVisualization:
         """Generate visualization code.
@@ -100,7 +100,7 @@ class VisualizationGenerator:
         self,
         skill: SkillMetadata,
         output_format: OutputFormat,
-        data_description: Optional[str] = None,
+        data_description: str | None = None,
     ) -> GeneratedVisualization:
         """Generate visualization using templates.
 
@@ -128,7 +128,7 @@ class VisualizationGenerator:
         self,
         skill: SkillMetadata,
         output_format: OutputFormat,
-        data_description: Optional[str] = None,
+        data_description: str | None = None,
     ) -> GeneratedVisualization:
         """Generate visualization using LLM.
 
@@ -195,7 +195,7 @@ class VisualizationGenerator:
             return PlotType.HISTOGRAM
 
     def _create_spec(
-        self, plot_type: PlotType, skill: SkillMetadata, data_description: Optional[str] = None
+        self, plot_type: PlotType, skill: SkillMetadata, data_description: str | None = None
     ) -> VisualizationSpec:
         """Create visualization specification.
 
@@ -329,7 +329,7 @@ class VisualizationGenerator:
         self,
         skill: SkillMetadata,
         output_format: OutputFormat,
-        data_description: Optional[str] = None,
+        data_description: str | None = None,
     ) -> str:
         """Build visualization generation prompt.
 
@@ -361,7 +361,7 @@ Requirements:
 4. Include example usage in if __name__ == "__main__" block
 5. Return the figure object from the function"""
 
-    def generate_multi_plot(self, specs: List[VisualizationSpec]) -> str:
+    def generate_multi_plot(self, specs: list[VisualizationSpec]) -> str:
         """Generate code for multiple subplots.
 
         Args:

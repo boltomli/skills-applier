@@ -3,7 +3,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import List, Dict, Optional, Any
+from typing import Any
 from datetime import datetime
 
 from .metadata_schema import SkillMetadata, SkillCategory, SkillIndexMetadata, DataType
@@ -14,14 +14,14 @@ logger = logging.getLogger(__name__)
 class SkillIndex:
     """Index for storing and querying skill metadata."""
 
-    def __init__(self, storage_path: Optional[Path] = None) -> None:
+    def __init__(self, storage_path: Path | None = None) -> None:
         """Initialize skill index.
 
         Args:
             storage_path: Path to store index JSON file
         """
         self.storage_path = storage_path or Path("data/skills_metadata/index.json")
-        self._metadata: Optional[SkillIndexMetadata] = None
+        self._metadata: SkillIndexMetadata | None = None
         self._ensure_storage_dir()
 
     def _ensure_storage_dir(self) -> None:
@@ -45,7 +45,7 @@ class SkillIndex:
             return self._metadata
 
         try:
-            with open(self.storage_path, "r", encoding="utf-8") as f:
+            with open(self.storage_path, encoding="utf-8") as f:
                 data = json.load(f)
 
             self._metadata = SkillIndexMetadata(**data)
@@ -109,7 +109,7 @@ class SkillIndex:
             self._metadata.add_skill(skill)
             logger.info(f"Added skill: {skill.id}")
 
-    def get_skill(self, skill_id: str) -> Optional[SkillMetadata]:
+    def get_skill(self, skill_id: str) -> SkillMetadata | None:
         """Get a skill by ID.
 
         Args:
@@ -126,7 +126,7 @@ class SkillIndex:
                 return skill
         return None
 
-    def get_all_skills(self) -> List[SkillMetadata]:
+    def get_all_skills(self) -> list[SkillMetadata]:
         """Get all skills in the index.
 
         Returns:
@@ -136,7 +136,7 @@ class SkillIndex:
             return []
         return self._metadata.skills.copy()
 
-    def get_by_category(self, category: SkillCategory) -> List[SkillMetadata]:
+    def get_by_category(self, category: SkillCategory) -> list[SkillMetadata]:
         """Get all skills in a category.
 
         Args:
@@ -149,7 +149,7 @@ class SkillIndex:
             return []
         return self._metadata.get_by_category(category)
 
-    def get_by_tag(self, tag: str) -> List[SkillMetadata]:
+    def get_by_tag(self, tag: str) -> list[SkillMetadata]:
         """Get all skills with a specific tag.
 
         Args:
@@ -162,7 +162,7 @@ class SkillIndex:
             return []
         return self._metadata.get_by_tag(tag)
 
-    def search(self, query: str) -> List[SkillMetadata]:
+    def search(self, query: str) -> list[SkillMetadata]:
         """Search skills by name, description, or tags.
 
         Args:
@@ -175,7 +175,7 @@ class SkillIndex:
             return []
         return self._metadata.search(query)
 
-    def filter_by_data_type(self, data_type: DataType) -> List[SkillMetadata]:
+    def filter_by_data_type(self, data_type: DataType) -> list[SkillMetadata]:
         """Filter skills by input data type.
 
         Args:
@@ -193,7 +193,7 @@ class SkillIndex:
             if data_type in skill.input_data_types or DataType.MIXED in skill.input_data_types
         ]
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get index statistics.
 
         Returns:
@@ -212,7 +212,7 @@ class SkillIndex:
             "last_updated": self._metadata.last_updated,
         }
 
-    def get_top_tags(self, limit: int = 20) -> List[tuple[str, int]]:
+    def get_top_tags(self, limit: int = 20) -> list[tuple[str, int]]:
         """Get most common tags across all skills.
 
         Args:
@@ -224,7 +224,7 @@ class SkillIndex:
         if not self._metadata:
             return []
 
-        tag_counts: Dict[str, int] = {}
+        tag_counts: dict[str, int] = {}
 
         for skill in self._metadata.skills:
             for tag in skill.tags:
@@ -232,7 +232,7 @@ class SkillIndex:
 
         return sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)[:limit]
 
-    def get_dependencies_summary(self) -> Dict[str, int]:
+    def get_dependencies_summary(self) -> dict[str, int]:
         """Get summary of dependencies across all skills.
 
         Returns:
@@ -241,7 +241,7 @@ class SkillIndex:
         if not self._metadata:
             return {}
 
-        dep_counts: Dict[str, int] = {}
+        dep_counts: dict[str, int] = {}
 
         for skill in self._metadata.skills:
             for dep in skill.dependencies:

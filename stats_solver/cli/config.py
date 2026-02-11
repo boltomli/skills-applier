@@ -2,7 +2,7 @@
 
 import logging
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any
 from dataclasses import dataclass
 
 from rich.console import Console
@@ -47,7 +47,7 @@ class ConfigManager:
     DEFAULT_CONFIG_FILE = "config/default.yaml"
     ENV_CONFIG_FILE = ".env"
 
-    def __init__(self, config_file: Optional[Path] = None):
+    def __init__(self, config_file: Path | None = None):
         """Initialize config manager.
 
         Args:
@@ -77,7 +77,7 @@ class ConfigManager:
         try:
             import yaml
 
-            with open(self.config_file, "r", encoding="utf-8") as f:
+            with open(self.config_file, encoding="utf-8") as f:
                 data = yaml.safe_load(f)
 
             if data:
@@ -130,7 +130,7 @@ class ConfigManager:
             paths = os.getenv("SKILL_BASE_PATH").split(",")
             self.config.skill_base_paths = [p.strip() for p in paths]
 
-    def _apply_config(self, data: Dict[str, Any]):
+    def _apply_config(self, data: dict[str, Any]):
         """Apply configuration data to config object.
 
         Args:
@@ -174,7 +174,7 @@ class ConfigManager:
         if "skills" in data and "base_paths" in data["skills"]:
             self.config.skill_base_paths = data["skills"]["base_paths"]
 
-    def save_config(self, config_file: Optional[Path] = None) -> bool:
+    def save_config(self, config_file: Path | None = None) -> bool:
         """Save configuration to file.
 
         Args:
@@ -342,7 +342,7 @@ class ConfigManager:
             for path in self.config.skill_base_paths:
                 console.print(f"  • {path}")
 
-    def validate_config(self) -> Dict[str, Any]:
+    def validate_config(self) -> dict[str, Any]:
         """Validate current configuration.
 
         Returns:
@@ -378,7 +378,7 @@ class ConfigManager:
         self.config = Config()
         console.print("[yellow]Configuration reset to defaults.[/yellow]")
 
-    def export_env_file(self, env_file: Optional[Path] = None) -> bool:
+    def export_env_file(self, env_file: Path | None = None) -> bool:
         """Export configuration to .env file.
 
         Args:

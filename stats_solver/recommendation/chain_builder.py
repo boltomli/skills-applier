@@ -1,7 +1,7 @@
 """Skill chain builder for multi-step analysis workflows."""
 
 import logging
-from typing import List, Dict, Optional, Any
+from typing import Any
 from dataclasses import dataclass
 from enum import Enum
 
@@ -32,8 +32,8 @@ class ChainStep:
     step_type: ChainStepType
     order: int
     description: str
-    depends_on: List[str]  # IDs of skills this step depends on
-    estimated_time: Optional[str] = None
+    depends_on: list[str]  # IDs of skills this step depends on
+    estimated_time: str | None = None
 
 
 @dataclass
@@ -42,12 +42,12 @@ class SkillChain:
 
     name: str
     description: str
-    steps: List[ChainStep]
+    steps: list[ChainStep]
     total_steps: int
     estimated_duration: str
     prerequisites_satisfied: bool
     confidence: float
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
 
 
 class SkillChainBuilder:
@@ -92,7 +92,7 @@ class SkillChainBuilder:
     }
 
     def __init__(
-        self, skill_index: SkillIndex, prereq_checker: Optional[PrerequisiteChecker] = None
+        self, skill_index: SkillIndex, prereq_checker: PrerequisiteChecker | None = None
     ) -> None:
         """Initialize skill chain builder.
 
@@ -108,7 +108,7 @@ class SkillChainBuilder:
         core_skill: SkillMetadata,
         problem_type: ProblemType,
         problem_features: ProblemFeatures,
-        available_skills: Optional[List[SkillMetadata]] = None,
+        available_skills: list[SkillMetadata] | None = None,
     ) -> SkillChain:
         """Build a skill chain starting from a core skill.
 
@@ -179,9 +179,9 @@ class SkillChainBuilder:
         self,
         step_type: ChainStepType,
         core_skill: SkillMetadata,
-        available_skills: List[SkillMetadata],
+        available_skills: list[SkillMetadata],
         problem_features: ProblemFeatures,
-    ) -> List[SkillMetadata]:
+    ) -> list[SkillMetadata]:
         """Find skills for a specific step type.
 
         Args:
@@ -249,8 +249,8 @@ class SkillChainBuilder:
         return skills[:3]  # Limit to 3 skills per step
 
     def _determine_dependencies(
-        self, skill: SkillMetadata, existing_steps: List[ChainStep], current_order: int
-    ) -> List[str]:
+        self, skill: SkillMetadata, existing_steps: list[ChainStep], current_order: int
+    ) -> list[str]:
         """Determine which existing steps this step depends on.
 
         Args:
@@ -318,8 +318,8 @@ class SkillChainBuilder:
         return "< 1 minute"
 
     async def _check_chain_prerequisites(
-        self, steps: List[ChainStep], available_skills: List[SkillMetadata]
-    ) -> List[PrerequisiteCheckResult]:
+        self, steps: list[ChainStep], available_skills: list[SkillMetadata]
+    ) -> list[PrerequisiteCheckResult]:
         """Check prerequisites for all steps in the chain.
 
         Args:
@@ -338,7 +338,7 @@ class SkillChainBuilder:
         return results
 
     def _calculate_chain_confidence(
-        self, steps: List[ChainStep], prereq_results: List[PrerequisiteCheckResult]
+        self, steps: list[ChainStep], prereq_results: list[PrerequisiteCheckResult]
     ) -> float:
         """Calculate overall confidence in the chain.
 
@@ -394,7 +394,7 @@ class SkillChainBuilder:
         """
         return f"Multi-step workflow for {problem_type.value.replace('_', ' ')} using {core_skill.name}"
 
-    def _estimate_chain_duration(self, steps: List[ChainStep]) -> str:
+    def _estimate_chain_duration(self, steps: list[ChainStep]) -> str:
         """Estimate total duration for the chain.
 
         Args:
@@ -415,11 +415,11 @@ class SkillChainBuilder:
 
     async def build_alternative_chains(
         self,
-        core_skills: List[SkillMetadata],
+        core_skills: list[SkillMetadata],
         problem_type: ProblemType,
         problem_features: ProblemFeatures,
         max_chains: int = 3,
-    ) -> List[SkillChain]:
+    ) -> list[SkillChain]:
         """Build alternative chains using different core skills.
 
         Args:

@@ -1,7 +1,6 @@
 """Constraint extraction for problem analysis."""
 
 import logging
-from typing import List, Dict, Optional
 from enum import Enum
 import re
 
@@ -51,7 +50,7 @@ class Constraint(BaseModel):
 
     type: ConstraintType
     description: str
-    value: Optional[str] = None
+    value: str | None = None
     strict: bool = False
     source: str = "extracted"  # extracted, implied, user_specified
 
@@ -59,11 +58,11 @@ class Constraint(BaseModel):
 class ConstraintExtractionResult(BaseModel):
     """Result of constraint extraction."""
 
-    constraints: List[Constraint]
+    constraints: list[Constraint]
     summary: str
-    critical_constraints: List[Constraint]
-    flexible_constraints: List[Constraint]
-    implied_assumptions: List[str]
+    critical_constraints: list[Constraint]
+    flexible_constraints: list[Constraint]
+    implied_assumptions: list[str]
 
 
 class ConstraintExtractor:
@@ -120,7 +119,7 @@ class ConstraintExtractor:
         "time": r"(\d+)\s+(second|minute|hour)",
     }
 
-    def __init__(self, use_llm: bool = False, llm_provider: Optional[LLMProvider] = None) -> None:
+    def __init__(self, use_llm: bool = False, llm_provider: LLMProvider | None = None) -> None:
         """Initialize constraint extractor.
 
         Args:
@@ -269,7 +268,7 @@ Return a JSON object with:
             source="extracted",
         )
 
-    def _deduplicate_constraints(self, constraints: List[Constraint]) -> List[Constraint]:
+    def _deduplicate_constraints(self, constraints: list[Constraint]) -> list[Constraint]:
         """Remove duplicate constraints.
 
         Args:
@@ -289,7 +288,7 @@ Return a JSON object with:
 
         return unique
 
-    def _extract_implied_assumptions(self, text: str, constraints: List[Constraint]) -> List[str]:
+    def _extract_implied_assumptions(self, text: str, constraints: list[Constraint]) -> list[str]:
         """Extract implied assumptions from text and constraints.
 
         Args:
@@ -325,7 +324,7 @@ Return a JSON object with:
 
         return list(set(assumptions))
 
-    def _generate_summary(self, constraints: List[Constraint]) -> str:
+    def _generate_summary(self, constraints: list[Constraint]) -> str:
         """Generate a summary of constraints.
 
         Args:
@@ -337,7 +336,7 @@ Return a JSON object with:
         if not constraints:
             return "No explicit constraints identified"
 
-        by_type: Dict[ConstraintType, List[Constraint]] = {}
+        by_type: dict[ConstraintType, list[Constraint]] = {}
         for c in constraints:
             if c.type not in by_type:
                 by_type[c.type] = []
@@ -367,7 +366,7 @@ Return a JSON object with:
 
     def get_constraint_by_type(
         self, result: ConstraintExtractionResult, constraint_type: ConstraintType
-    ) -> List[Constraint]:
+    ) -> list[Constraint]:
         """Get all constraints of a specific type.
 
         Args:
@@ -380,7 +379,7 @@ Return a JSON object with:
         return [c for c in result.constraints if c.type == constraint_type]
 
     def merge_constraints(
-        self, results: List[ConstraintExtractionResult]
+        self, results: list[ConstraintExtractionResult]
     ) -> ConstraintExtractionResult:
         """Merge multiple constraint extraction results.
 

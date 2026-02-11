@@ -1,7 +1,7 @@
 """Base LLM provider interface."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Dict, List
+from typing import Any
 from pydantic import BaseModel, Field
 
 
@@ -15,13 +15,13 @@ class LLMConfig(BaseModel):
     provider: str = "ollama"
 
     # Optional API endpoint override
-    api_endpoint: Optional[str] = None
+    api_endpoint: str | None = None
 
     # Model parameters
     temperature: float = 0.7
-    max_tokens: Optional[int] = None
+    max_tokens: int | None = None
     top_p: float = 0.9
-    top_k: Optional[int] = None
+    top_k: int | None = None
 
 
 class LLMResponse(BaseModel):
@@ -30,9 +30,9 @@ class LLMResponse(BaseModel):
     content: str
     model: str
     provider: str
-    finish_reason: Optional[str] = None
-    tokens_used: Optional[int] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    finish_reason: str | None = None
+    tokens_used: int | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class LLMProvider(ABC):
@@ -41,7 +41,7 @@ class LLMProvider(ABC):
     def __init__(self, config: LLMConfig) -> None:
         """Initialize LLM provider with configuration."""
         self.config = config
-        self._client: Optional[Any] = None
+        self._client: Any | None = None
 
     @property
     @abstractmethod
@@ -60,7 +60,7 @@ class LLMProvider(ABC):
         pass
 
     @abstractmethod
-    async def list_models(self) -> List[str]:
+    async def list_models(self) -> list[str]:
         """List available models."""
         pass
 
@@ -68,9 +68,9 @@ class LLMProvider(ABC):
     async def generate(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
+        system_prompt: str | None = None,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
         **kwargs: Any,
     ) -> LLMResponse:
         """Generate text from LLM."""
@@ -80,17 +80,17 @@ class LLMProvider(ABC):
     async def generate_json(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         **kwargs: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate JSON response from LLM."""
         pass
 
     async def chat(
         self,
-        messages: List[Dict[str, str]],
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
+        messages: list[dict[str, str]],
+        temperature: float | None = None,
+        max_tokens: int | None = None,
         **kwargs: Any,
     ) -> LLMResponse:
         """Generate response from chat messages."""
@@ -103,7 +103,7 @@ class LLMProvider(ABC):
             **kwargs,
         )
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check on LLM service."""
         try:
             models = await self.list_models()

@@ -1,7 +1,7 @@
 """Manual skill classification editor for correcting metadata."""
 
 import logging
-from typing import Optional, Dict, Any
+from typing import Any
 from pathlib import Path
 
 from .metadata_schema import SkillMetadata, SkillCategory, DataType
@@ -21,9 +21,7 @@ class SkillEditor:
         """
         self.index = index
 
-    def update_category(
-        self, skill_id: str, new_category: SkillCategory
-    ) -> Optional[SkillMetadata]:
+    def update_category(self, skill_id: str, new_category: SkillCategory) -> SkillMetadata | None:
         """Update the category of a skill.
 
         Args:
@@ -48,7 +46,7 @@ class SkillEditor:
 
     def update_tags(
         self, skill_id: str, tags: list[str], mode: str = "replace"
-    ) -> Optional[SkillMetadata]:
+    ) -> SkillMetadata | None:
         """Update the tags of a skill.
 
         Args:
@@ -83,8 +81,8 @@ class SkillEditor:
         return skill
 
     def update_description(
-        self, skill_id: str, description: str, long_description: Optional[str] = None
-    ) -> Optional[SkillMetadata]:
+        self, skill_id: str, description: str, long_description: str | None = None
+    ) -> SkillMetadata | None:
         """Update the description of a skill.
 
         Args:
@@ -110,9 +108,7 @@ class SkillEditor:
         logger.info(f"Updated description for {skill_id}")
         return skill
 
-    def update_data_types(
-        self, skill_id: str, data_types: list[DataType]
-    ) -> Optional[SkillMetadata]:
+    def update_data_types(self, skill_id: str, data_types: list[DataType]) -> SkillMetadata | None:
         """Update the input data types of a skill.
 
         Args:
@@ -135,8 +131,8 @@ class SkillEditor:
         return skill
 
     def update_statistical_concept(
-        self, skill_id: str, concept: Optional[str]
-    ) -> Optional[SkillMetadata]:
+        self, skill_id: str, concept: str | None
+    ) -> SkillMetadata | None:
         """Update the statistical concept of a skill.
 
         Args:
@@ -160,7 +156,7 @@ class SkillEditor:
 
     def update_dependencies(
         self, skill_id: str, dependencies: list[str], mode: str = "replace"
-    ) -> Optional[SkillMetadata]:
+    ) -> SkillMetadata | None:
         """Update the dependencies of a skill.
 
         Args:
@@ -194,7 +190,7 @@ class SkillEditor:
         logger.info(f"Updated dependencies for {skill_id} ({mode})")
         return skill
 
-    def add_use_case(self, skill_id: str, use_case: str) -> Optional[SkillMetadata]:
+    def add_use_case(self, skill_id: str, use_case: str) -> SkillMetadata | None:
         """Add a use case to a skill.
 
         Args:
@@ -219,7 +215,7 @@ class SkillEditor:
 
     def update_custom_field(
         self, skill_id: str, field_name: str, field_value: Any
-    ) -> Optional[SkillMetadata]:
+    ) -> SkillMetadata | None:
         """Update a custom field for a skill.
 
         Args:
@@ -242,7 +238,7 @@ class SkillEditor:
         logger.info(f"Updated custom field '{field_name}' for {skill_id}")
         return skill
 
-    def bulk_update(self, updates: Dict[str, Dict[str, Any]]) -> Dict[str, bool]:
+    def bulk_update(self, updates: dict[str, dict[str, Any]]) -> dict[str, bool]:
         """Update multiple skills at once.
 
         Args:
@@ -276,7 +272,7 @@ class SkillEditor:
 
         return results
 
-    def review_skill(self, skill_id: str) -> Optional[Dict[str, Any]]:
+    def review_skill(self, skill_id: str) -> dict[str, Any] | None:
         """Generate a review summary for a skill.
 
         Args:

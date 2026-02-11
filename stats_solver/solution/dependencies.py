@@ -1,7 +1,6 @@
 """Dependency generator for managing code dependencies."""
 
 import logging
-from typing import List, Dict, Optional, Set, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +57,7 @@ class DependencyGenerator:
         """Initialize dependency generator."""
         pass
 
-    def generate_imports(self, dependencies: List[str]) -> List[str]:
+    def generate_imports(self, dependencies: list[str]) -> list[str]:
         """Generate import statements from dependencies.
 
         Args:
@@ -78,7 +77,7 @@ class DependencyGenerator:
 
         return imports
 
-    def _generate_import_statement(self, dependency: str) -> Optional[str]:
+    def _generate_import_statement(self, dependency: str) -> str | None:
         """Generate a single import statement.
 
         Args:
@@ -104,7 +103,7 @@ class DependencyGenerator:
             else:
                 return f"import {dependency}"
 
-    def _get_alias(self, dependency: str) -> Optional[str]:
+    def _get_alias(self, dependency: str) -> str | None:
         """Get common alias for a package.
 
         Args:
@@ -126,7 +125,7 @@ class DependencyGenerator:
 
         return None
 
-    def generate_requirements_txt(self, dependencies: List[str]) -> str:
+    def generate_requirements_txt(self, dependencies: list[str]) -> str:
         """Generate requirements.txt content.
 
         Args:
@@ -138,7 +137,7 @@ class DependencyGenerator:
         packages = self._extract_packages(dependencies)
 
         # Group by package and deduplicate
-        unique_packages: Set[Tuple[str, Optional[str]]] = set()
+        unique_packages: set[tuple[str, str | None]] = set()
         for pkg, version in packages:
             unique_packages.add((pkg, version))
 
@@ -152,7 +151,7 @@ class DependencyGenerator:
 
         return "\n".join(lines)
 
-    def _extract_packages(self, dependencies: List[str]) -> List[Tuple[str, Optional[str]]]:
+    def _extract_packages(self, dependencies: list[str]) -> list[tuple[str, str | None]]:
         """Extract package names from dependencies.
 
         Args:
@@ -184,7 +183,7 @@ class DependencyGenerator:
 
         return packages
 
-    def generate_setup_py(self, dependencies: List[str], project_name: str) -> str:
+    def generate_setup_py(self, dependencies: list[str], project_name: str) -> str:
         """Generate setup.py content.
 
         Args:
@@ -207,7 +206,7 @@ setup(
     python_requires=">=3.8",
 )"""
 
-    def generate_pyproject_toml_dependencies(self, dependencies: List[str]) -> str:
+    def generate_pyproject_toml_dependencies(self, dependencies: list[str]) -> str:
         """Generate pyproject.toml dependencies section.
 
         Args:
@@ -221,7 +220,7 @@ setup(
 
         return f"dependencies = [\n    {',\\n    '.join(deps_lines)}\n]"
 
-    def check_conflicts(self, dependencies: List[str]) -> List[str]:
+    def check_conflicts(self, dependencies: list[str]) -> list[str]:
         """Check for potential dependency conflicts.
 
         Args:
@@ -251,7 +250,7 @@ setup(
 
         return conflicts
 
-    def suggest_alternatives(self, dependency: str) -> List[str]:
+    def suggest_alternatives(self, dependency: str) -> list[str]:
         """Suggest alternative packages for a dependency.
 
         Args:
@@ -270,7 +269,7 @@ setup(
         pkg = dependency.split(">=")[0].split("==")[0].split("~=")[0].lower()
         return alternatives.get(pkg, [])
 
-    def get_dependency_info(self, dependency: str) -> Dict[str, str]:
+    def get_dependency_info(self, dependency: str) -> dict[str, str]:
         """Get information about a dependency.
 
         Args:
@@ -289,7 +288,7 @@ setup(
             "import_statement": self._generate_import_statement(pkg),
         }
 
-    def merge_dependencies(self, dependency_lists: List[List[str]]) -> List[str]:
+    def merge_dependencies(self, dependency_lists: list[list[str]]) -> list[str]:
         """Merge multiple dependency lists, removing duplicates.
 
         Args:
@@ -308,7 +307,7 @@ setup(
 
         return sorted(filtered)
 
-    def generate_install_command(self, dependencies: List[str]) -> str:
+    def generate_install_command(self, dependencies: list[str]) -> str:
         """Generate pip install command.
 
         Args:

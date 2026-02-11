@@ -1,7 +1,7 @@
 """Skill matching algorithm for problem-skill compatibility."""
 
 import logging
-from typing import List, Optional, Any, Tuple
+from typing import Any
 from dataclasses import dataclass
 
 from ..skills.metadata_schema import SkillMetadata, SkillCategory, DataType
@@ -19,8 +19,8 @@ class MatchResult:
 
     skill: SkillMetadata
     score: float
-    match_reasons: List[str]
-    mismatches: List[str]
+    match_reasons: list[str]
+    mismatches: list[str]
     confidence: float
 
 
@@ -37,7 +37,7 @@ class SkillMatcher:
         "statistical_concept_match": 0.05,
     }
 
-    def __init__(self, use_llm: bool = False, llm_provider: Optional[Any] = None) -> None:
+    def __init__(self, use_llm: bool = False, llm_provider: Any | None = None) -> None:
         """Initialize skill matcher.
 
         Args:
@@ -49,13 +49,13 @@ class SkillMatcher:
 
     async def match(
         self,
-        skills: List[SkillMetadata],
+        skills: list[SkillMetadata],
         problem_features: ProblemFeatures,
         problem_type: ProblemType,
-        data_type_result: Optional[DataTypeDetectionResult] = None,
-        output_format: Optional[OutputFormat] = None,
+        data_type_result: DataTypeDetectionResult | None = None,
+        output_format: OutputFormat | None = None,
         top_k: int = 10,
-    ) -> List[MatchResult]:
+    ) -> list[MatchResult]:
         """Match skills to a problem.
 
         Args:
@@ -86,8 +86,8 @@ class SkillMatcher:
         skill: SkillMetadata,
         problem_features: ProblemFeatures,
         problem_type: ProblemType,
-        data_type_result: Optional[DataTypeDetectionResult] = None,
-        output_format: Optional[OutputFormat] = None,
+        data_type_result: DataTypeDetectionResult | None = None,
+        output_format: OutputFormat | None = None,
     ) -> MatchResult:
         """Match a single skill to the problem.
 
@@ -161,7 +161,7 @@ class SkillMatcher:
 
     def _match_category(
         self, skill: SkillMetadata, problem_features: ProblemFeatures
-    ) -> Tuple[float, Optional[str]]:
+    ) -> tuple[float, str | None]:
         """Match skill category to problem type.
 
         Args:
@@ -204,8 +204,8 @@ class SkillMatcher:
         self,
         skill: SkillMetadata,
         problem_features: ProblemFeatures,
-        data_type_result: Optional[DataTypeDetectionResult] = None,
-    ) -> Tuple[float, Optional[str]]:
+        data_type_result: DataTypeDetectionResult | None = None,
+    ) -> tuple[float, str | None]:
         """Match skill's data types to problem's data types.
 
         Args:
@@ -245,7 +245,7 @@ class SkillMatcher:
 
     def _match_problem_type(
         self, skill: SkillMetadata, problem_type: ProblemType
-    ) -> Tuple[float, Optional[str]]:
+    ) -> tuple[float, str | None]:
         """Match skill to problem type.
 
         Args:
@@ -282,8 +282,8 @@ class SkillMatcher:
         return 0.4, f"May be applicable to {problem_type.value}"
 
     def _match_output_format(
-        self, skill: SkillMetadata, output_format: Optional[OutputFormat]
-    ) -> Tuple[float, Optional[str]]:
+        self, skill: SkillMetadata, output_format: OutputFormat | None
+    ) -> tuple[float, str | None]:
         """Match skill's output format to required format.
 
         Args:
@@ -321,7 +321,7 @@ class SkillMatcher:
 
     def _match_tags(
         self, skill: SkillMetadata, problem_features: ProblemFeatures
-    ) -> Tuple[float, Optional[str]]:
+    ) -> tuple[float, str | None]:
         """Match skill tags to problem context.
 
         Args:
@@ -334,8 +334,8 @@ class SkillMatcher:
         if not skill.tags or not problem_features.context_keywords:
             return 0.5, "Tag relevance unclear"
 
-        skill_tags = set(tag.lower() for tag in skill.tags)
-        problem_keywords = set(kw.lower() for kw in problem_features.context_keywords)
+        skill_tags = {tag.lower() for tag in skill.tags}
+        problem_keywords = {kw.lower() for kw in problem_features.context_keywords}
 
         # Check for tag matches
         matches = skill_tags & problem_keywords
@@ -356,7 +356,7 @@ class SkillMatcher:
 
     def _match_statistical_concept(
         self, skill: SkillMetadata, problem_features: ProblemFeatures
-    ) -> Tuple[float, Optional[str]]:
+    ) -> tuple[float, str | None]:
         """Match skill's statistical concept to problem.
 
         Args:
@@ -399,8 +399,8 @@ class SkillMatcher:
         return 0.5, f"Statistical concept: {skill.statistical_concept}"
 
     def filter_by_min_score(
-        self, results: List[MatchResult], min_score: float = 0.5
-    ) -> List[MatchResult]:
+        self, results: list[MatchResult], min_score: float = 0.5
+    ) -> list[MatchResult]:
         """Filter results by minimum score.
 
         Args:

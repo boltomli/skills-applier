@@ -1,7 +1,6 @@
 """LLM manager for model selection and configuration."""
 
 import logging
-from typing import Dict, List, Optional
 
 from .base import LLMProvider, LLMConfig
 from .factory import create_and_connect, LLMConnectionError
@@ -15,8 +14,8 @@ class LLMManager:
     def __init__(self, config: LLMConfig) -> None:
         """Initialize LLM manager."""
         self.config = config
-        self._provider: Optional[LLMProvider] = None
-        self._available_models: Optional[List[str]] = None
+        self._provider: LLMProvider | None = None
+        self._available_models: list[str] | None = None
 
     async def initialize(self) -> bool:
         """Initialize LLM manager and connect to provider."""
@@ -44,7 +43,7 @@ class LLMManager:
         return self._provider
 
     @property
-    def available_models(self) -> List[str]:
+    def available_models(self) -> list[str]:
         """Get list of available models."""
         if self._available_models is None:
             raise RuntimeError("LLM manager not initialized. Call initialize() first.")
@@ -60,7 +59,7 @@ class LLMManager:
         self.config.model = model_name
         return True
 
-    async def get_model_info(self, model_name: Optional[str] = None) -> Dict:
+    async def get_model_info(self, model_name: str | None = None) -> dict:
         """Get information about a model."""
         model = model_name or self.config.model
 
@@ -71,7 +70,7 @@ class LLMManager:
             "current": model == self.config.model,
         }
 
-    async def list_models_with_info(self) -> List[Dict]:
+    async def list_models_with_info(self) -> list[dict]:
         """List all available models with information."""
         return [
             {
@@ -82,7 +81,7 @@ class LLMManager:
             for model in self.available_models
         ]
 
-    def get_config(self) -> Dict:
+    def get_config(self) -> dict:
         """Get current configuration."""
         return self.config.model_dump()
 

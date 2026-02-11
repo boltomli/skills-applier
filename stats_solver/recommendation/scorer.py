@@ -1,7 +1,7 @@
 """Recommendation scoring system for ranking skill matches."""
 
 import logging
-from typing import List, Dict, Optional, Any
+from typing import Any
 from dataclasses import dataclass
 from enum import Enum
 
@@ -29,10 +29,10 @@ class Recommendation:
     match_score: float
     confidence: float
     final_score: float
-    match_reasons: List[str]
-    mismatches: List[str]
-    ranking_position: Optional[int] = None
-    metadata: Dict[str, Any] = None
+    match_reasons: list[str]
+    mismatches: list[str]
+    ranking_position: int | None = None
+    metadata: dict[str, Any] = None
 
 
 class RecommendationScorer:
@@ -49,7 +49,7 @@ class RecommendationScorer:
     def __init__(
         self,
         ranking_method: RankingMethod = RankingMethod.BALANCED,
-        skill_usage_history: Optional[Dict[str, int]] = None,
+        skill_usage_history: dict[str, int] | None = None,
     ) -> None:
         """Initialize recommendation scorer.
 
@@ -61,8 +61,8 @@ class RecommendationScorer:
         self.skill_usage_history = skill_usage_history or {}
 
     def score_recommendations(
-        self, match_results: List[MatchResult], max_recommendations: int = 5
-    ) -> List[Recommendation]:
+        self, match_results: list[MatchResult], max_recommendations: int = 5
+    ) -> list[Recommendation]:
         """Score and rank match results into recommendations.
 
         Args:
@@ -136,7 +136,7 @@ class RecommendationScorer:
 
         return match_result.score
 
-    def _rank_recommendations(self, recommendations: List[Recommendation]) -> List[Recommendation]:
+    def _rank_recommendations(self, recommendations: list[Recommendation]) -> list[Recommendation]:
         """Rank recommendations by final score.
 
         Args:
@@ -147,7 +147,7 @@ class RecommendationScorer:
         """
         return sorted(recommendations, key=lambda r: r.final_score, reverse=True)
 
-    def compare_recommendations(self, recommendations: List[Recommendation]) -> Dict[str, Any]:
+    def compare_recommendations(self, recommendations: list[Recommendation]) -> dict[str, Any]:
         """Generate comparison summary of recommendations.
 
         Args:
@@ -195,7 +195,7 @@ class RecommendationScorer:
             "categories": self._get_category_distribution(recommendations),
         }
 
-    def _get_category_distribution(self, recommendations: List[Recommendation]) -> Dict[str, int]:
+    def _get_category_distribution(self, recommendations: list[Recommendation]) -> dict[str, int]:
         """Get distribution of skill categories.
 
         Args:
@@ -213,8 +213,8 @@ class RecommendationScorer:
         return distribution
 
     def filter_by_threshold(
-        self, recommendations: List[Recommendation], threshold: float = 0.5
-    ) -> List[Recommendation]:
+        self, recommendations: list[Recommendation], threshold: float = 0.5
+    ) -> list[Recommendation]:
         """Filter recommendations by score threshold.
 
         Args:
@@ -227,8 +227,8 @@ class RecommendationScorer:
         return [r for r in recommendations if r.final_score >= threshold]
 
     def get_diverse_recommendations(
-        self, recommendations: List[Recommendation], max_per_category: int = 2
-    ) -> List[Recommendation]:
+        self, recommendations: list[Recommendation], max_per_category: int = 2
+    ) -> list[Recommendation]:
         """Get diverse recommendations across categories.
 
         Args:
@@ -239,7 +239,7 @@ class RecommendationScorer:
             Diversified recommendations
         """
         # Group by category
-        by_category: Dict[str, List[Recommendation]] = {}
+        by_category: dict[str, list[Recommendation]] = {}
 
         for rec in recommendations:
             category = rec.skill.category.value
@@ -257,7 +257,7 @@ class RecommendationScorer:
 
         return diverse
 
-    def explain_score(self, recommendation: Recommendation) -> Dict[str, Any]:
+    def explain_score(self, recommendation: Recommendation) -> dict[str, Any]:
         """Generate explanation for a recommendation's score.
 
         Args:
@@ -294,7 +294,7 @@ class RecommendationScorer:
 
         return explanation
 
-    def aggregate_scores(self, recommendations: List[Recommendation]) -> float:
+    def aggregate_scores(self, recommendations: list[Recommendation]) -> float:
         """Calculate aggregate score for a set of recommendations.
 
         Args:

@@ -1,7 +1,7 @@
 """Alternative finder for suggesting alternative solutions."""
 
 import logging
-from typing import List, Dict, Optional, Any
+from typing import Any
 from dataclasses import dataclass
 from enum import Enum
 
@@ -30,9 +30,9 @@ class Alternative:
     skill: SkillMetadata
     alternative_type: AlternativeType
     similarity_score: float
-    advantages: List[str]
-    disadvantages: List[str]
-    use_when: List[str]
+    advantages: list[str]
+    disadvantages: list[str]
+    use_when: list[str]
     confidence: float
 
 
@@ -41,10 +41,10 @@ class AlternativeSet:
     """A set of alternative solutions."""
 
     primary_recommendation: SkillMetadata
-    alternatives: List[Alternative]
+    alternatives: list[Alternative]
     total_alternatives: int
     reasoning: str
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
 
 
 class AlternativeFinder:
@@ -79,7 +79,7 @@ class AlternativeFinder:
         self,
         primary_skill: SkillMetadata,
         problem_type: ProblemType,
-        data_type_result: Optional[DataTypeDetectionResult] = None,
+        data_type_result: DataTypeDetectionResult | None = None,
         max_alternatives: int = 5,
     ) -> AlternativeSet:
         """Find alternative solutions to the primary recommendation.
@@ -147,9 +147,9 @@ class AlternativeFinder:
     async def _find_similar_methods(
         self,
         primary_skill: SkillMetadata,
-        all_skills: List[SkillMetadata],
+        all_skills: list[SkillMetadata],
         problem_type: ProblemType,
-    ) -> List[Alternative]:
+    ) -> list[Alternative]:
         """Find methods similar to the primary skill.
 
         Args:
@@ -207,9 +207,9 @@ class AlternativeFinder:
     async def _find_simpler_alternatives(
         self,
         primary_skill: SkillMetadata,
-        all_skills: List[SkillMetadata],
+        all_skills: list[SkillMetadata],
         problem_type: ProblemType,
-    ) -> List[Alternative]:
+    ) -> list[Alternative]:
         """Find simpler alternatives to the primary skill.
 
         Args:
@@ -258,9 +258,9 @@ class AlternativeFinder:
     async def _find_more_advanced(
         self,
         primary_skill: SkillMetadata,
-        all_skills: List[SkillMetadata],
+        all_skills: list[SkillMetadata],
         problem_type: ProblemType,
-    ) -> List[Alternative]:
+    ) -> list[Alternative]:
         """Find more advanced alternatives to the primary skill.
 
         Args:
@@ -301,10 +301,10 @@ class AlternativeFinder:
     async def _find_different_approaches(
         self,
         primary_skill: SkillMetadata,
-        all_skills: List[SkillMetadata],
+        all_skills: list[SkillMetadata],
         problem_type: ProblemType,
-        data_type_result: Optional[DataTypeDetectionResult] = None,
-    ) -> List[Alternative]:
+        data_type_result: DataTypeDetectionResult | None = None,
+    ) -> list[Alternative]:
         """Find different approaches to solving the same problem.
 
         Args:
@@ -344,9 +344,9 @@ class AlternativeFinder:
     async def _find_complementary(
         self,
         primary_skill: SkillMetadata,
-        all_skills: List[SkillMetadata],
+        all_skills: list[SkillMetadata],
         problem_type: ProblemType,
-    ) -> List[Alternative]:
+    ) -> list[Alternative]:
         """Find methods that complement the primary skill.
 
         Args:
@@ -450,7 +450,7 @@ class AlternativeFinder:
 
     def _get_advantages(
         self, alternative_skill: SkillMetadata, primary_skill: SkillMetadata
-    ) -> List[str]:
+    ) -> list[str]:
         """Get advantages of the alternative over primary.
 
         Args:
@@ -482,7 +482,7 @@ class AlternativeFinder:
 
     def _get_disadvantages(
         self, alternative_skill: SkillMetadata, primary_skill: SkillMetadata
-    ) -> List[str]:
+    ) -> list[str]:
         """Get disadvantages of the alternative compared to primary.
 
         Args:
@@ -512,7 +512,7 @@ class AlternativeFinder:
 
         return disadvantages
 
-    def _get_use_when(self, skill: SkillMetadata, alt_type: str) -> List[str]:
+    def _get_use_when(self, skill: SkillMetadata, alt_type: str) -> list[str]:
         """Get use cases for the alternative.
 
         Args:
@@ -529,7 +529,7 @@ class AlternativeFinder:
         else:
             return skill.use_cases[:2] if skill.use_cases else ["General use"]
 
-    def _deduplicate_alternatives(self, alternatives: List[Alternative]) -> List[Alternative]:
+    def _deduplicate_alternatives(self, alternatives: list[Alternative]) -> list[Alternative]:
         """Remove duplicate alternatives.
 
         Args:
@@ -550,7 +550,7 @@ class AlternativeFinder:
         return unique
 
     def _generate_reasoning(
-        self, primary_skill: SkillMetadata, alternatives: List[Alternative]
+        self, primary_skill: SkillMetadata, alternatives: list[Alternative]
     ) -> str:
         """Generate reasoning for the alternative set.
 

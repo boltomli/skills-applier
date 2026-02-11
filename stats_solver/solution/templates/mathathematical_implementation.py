@@ -1,6 +1,6 @@
 """Template for mathematical implementations."""
 
-from typing import Dict, Any
+from typing import Any
 from .base import BaseTemplate
 
 
@@ -68,7 +68,7 @@ if __name__ == "__main__":
 
         return self.TEMPLATE.format(**variables)
 
-    def _get_params(self, kwargs: Dict[str, Any]) -> str:
+    def _get_params(self, kwargs: dict[str, Any]) -> str:
         """Get function parameters.
 
         Args:
@@ -79,7 +79,7 @@ if __name__ == "__main__":
         """
         return "data, *args, **kwargs"
 
-    def _get_param_docs(self, kwargs: Dict[str, Any]) -> str:
+    def _get_param_docs(self, kwargs: dict[str, Any]) -> str:
         """Get parameter documentation.
 
         Args:
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     **kwargs : additional keyword arguments
         Additional keyword arguments"""
 
-    def _get_validation(self, kwargs: Dict[str, Any]) -> str:
+    def _get_validation(self, kwargs: dict[str, Any]) -> str:
         """Get input validation code.
 
         Args:
@@ -108,7 +108,7 @@ if __name__ == "__main__":
     if data.size == 0:
         raise ValueError("Input data cannot be empty")"""
 
-    def _get_implementation(self, kwargs: Dict[str, Any]) -> str:
+    def _get_implementation(self, kwargs: dict[str, Any]) -> str:
         """Get implementation code.
 
         Args:
@@ -119,7 +119,7 @@ if __name__ == "__main__":
         """
         return """result = perform_calculation(data)  # Implement your algorithm here"""
 
-    def _get_return_value(self, kwargs: Dict[str, Any]) -> str:
+    def _get_return_value(self, kwargs: dict[str, Any]) -> str:
         """Get return value expression.
 
         Args:

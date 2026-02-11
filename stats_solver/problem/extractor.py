@@ -1,7 +1,6 @@
 """Problem feature extractor for analyzing user queries."""
 
 import logging
-from typing import List, Optional
 import re
 
 from pydantic import BaseModel
@@ -20,29 +19,29 @@ class ProblemFeatures(BaseModel):
     summary: str
 
     # Data characteristics
-    data_types: List[DataType]
-    data_source_hints: List[str]
-    sample_size_hint: Optional[str] = None
+    data_types: list[DataType]
+    data_source_hints: list[str]
+    sample_size_hint: str | None = None
 
     # Problem type
     problem_type: str
-    subtypes: List[str]
+    subtypes: list[str]
 
     # Goals and objectives
     primary_goal: str
-    secondary_goals: List[str]
+    secondary_goals: list[str]
 
     # Constraints
-    constraints: List[str]
-    assumptions: List[str]
+    constraints: list[str]
+    assumptions: list[str]
 
     # Expected output
-    output_format: Optional[str] = None
-    output_requirements: List[str] = []
+    output_format: str | None = None
+    output_requirements: list[str] = []
 
     # Domain and context
-    domain: Optional[str] = None
-    context_keywords: List[str] = []
+    domain: str | None = None
+    context_keywords: list[str] = []
 
     # Complexity indicators
     complexity_score: float = 0.5
@@ -129,7 +128,7 @@ class ProblemExtractor:
         "database": ["database", "records", "log", "data"],
     }
 
-    def __init__(self, use_llm: bool = False, llm_provider: Optional[LLMProvider] = None) -> None:
+    def __init__(self, use_llm: bool = False, llm_provider: LLMProvider | None = None) -> None:
         """Initialize problem extractor.
 
         Args:
@@ -323,7 +322,7 @@ Return a JSON object with:
 
         return problem_type, subtypes[:5]
 
-    def _detect_data_types(self, text: str) -> List[DataType]:
+    def _detect_data_types(self, text: str) -> list[DataType]:
         """Detect data types from text.
 
         Args:
@@ -356,7 +355,7 @@ Return a JSON object with:
         else:
             return [DataType.NUMERICAL]
 
-    def _detect_data_sources(self, text: str) -> List[str]:
+    def _detect_data_sources(self, text: str) -> list[str]:
         """Detect data source hints from text.
 
         Args:
@@ -395,7 +394,7 @@ Return a JSON object with:
 
         return goals[0], goals[1:]
 
-    def _extract_constraints(self, text: str) -> List[str]:
+    def _extract_constraints(self, text: str) -> list[str]:
         """Extract constraints from problem description.
 
         Args:
@@ -421,7 +420,7 @@ Return a JSON object with:
 
         return list(set(constraints))
 
-    def _detect_output_format(self, text: str) -> Optional[str]:
+    def _detect_output_format(self, text: str) -> str | None:
         """Detect expected output format from text.
 
         Args:
@@ -443,7 +442,7 @@ Return a JSON object with:
 
         return None
 
-    def _extract_context_keywords(self, text: str) -> List[str]:
+    def _extract_context_keywords(self, text: str) -> list[str]:
         """Extract relevant context keywords.
 
         Args:

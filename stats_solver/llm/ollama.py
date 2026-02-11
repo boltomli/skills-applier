@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 import httpx
 
 from .base import LLMProvider, LLMConfig, LLMResponse
@@ -16,7 +16,7 @@ class OllamaProvider(LLMProvider):
     def __init__(self, config: LLMConfig) -> None:
         """Initialize Ollama provider."""
         super().__init__(config)
-        self._http_client: Optional[httpx.AsyncClient] = None
+        self._http_client: httpx.AsyncClient | None = None
 
     @property
     def is_available(self) -> bool:
@@ -47,7 +47,7 @@ class OllamaProvider(LLMProvider):
             self._http_client = None
             logger.info("Disconnected from Ollama")
 
-    async def list_models(self) -> List[str]:
+    async def list_models(self) -> list[str]:
         """List available Ollama models."""
         if not self._http_client:
             raise RuntimeError("Not connected to Ollama")
@@ -64,9 +64,9 @@ class OllamaProvider(LLMProvider):
     async def generate(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
+        system_prompt: str | None = None,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
         **kwargs: Any,
     ) -> LLMResponse:
         """Generate text from Ollama."""
@@ -113,9 +113,9 @@ class OllamaProvider(LLMProvider):
     async def generate_json(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         **kwargs: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate JSON response from Ollama."""
         # Add JSON formatting instruction to system prompt
         json_instruction = "You must respond with valid JSON only. Do not include any explanation or markdown formatting."
@@ -145,9 +145,9 @@ class OllamaProvider(LLMProvider):
 
     async def chat(
         self,
-        messages: List[Dict[str, str]],
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
+        messages: list[dict[str, str]],
+        temperature: float | None = None,
+        max_tokens: int | None = None,
         **kwargs: Any,
     ) -> LLMResponse:
         """Generate response from chat messages using Ollama chat API."""

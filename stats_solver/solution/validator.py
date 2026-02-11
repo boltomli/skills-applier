@@ -3,7 +3,6 @@
 import logging
 import ast
 import re
-from typing import List, Optional
 from dataclasses import dataclass
 from enum import Enum
 
@@ -24,9 +23,9 @@ class ValidationIssue:
 
     severity: ValidationSeverity
     message: str
-    line_number: Optional[int]
-    code_snippet: Optional[str]
-    suggestion: Optional[str]
+    line_number: int | None
+    code_snippet: str | None
+    suggestion: str | None
 
 
 @dataclass
@@ -34,7 +33,7 @@ class ValidationResult:
     """Result of code validation."""
 
     is_valid: bool
-    issues: List[ValidationIssue]
+    issues: list[ValidationIssue]
     error_count: int
     warning_count: int
     info_count: int
@@ -110,7 +109,7 @@ class CodeValidator:
             summary=summary,
         )
 
-    def _check_syntax(self, code: str) -> List[ValidationIssue]:
+    def _check_syntax(self, code: str) -> list[ValidationIssue]:
         """Check for syntax errors.
 
         Args:
@@ -136,7 +135,7 @@ class CodeValidator:
 
         return issues
 
-    def _check_imports(self, code: str) -> List[ValidationIssue]:
+    def _check_imports(self, code: str) -> list[ValidationIssue]:
         """Check import statements.
 
         Args:
@@ -190,7 +189,7 @@ class CodeValidator:
 
         return issues
 
-    def _check_structure(self, code: str) -> List[ValidationIssue]:
+    def _check_structure(self, code: str) -> list[ValidationIssue]:
         """Check code structure.
 
         Args:
@@ -245,7 +244,7 @@ class CodeValidator:
 
         return issues
 
-    def _check_style(self, code: str) -> List[ValidationIssue]:
+    def _check_style(self, code: str) -> list[ValidationIssue]:
         """Check code style.
 
         Args:
@@ -284,7 +283,7 @@ class CodeValidator:
 
         return issues
 
-    def _check_best_practices(self, code: str) -> List[ValidationIssue]:
+    def _check_best_practices(self, code: str) -> list[ValidationIssue]:
         """Check Python best practices.
 
         Args:
@@ -338,7 +337,7 @@ class CodeValidator:
 
         return issues
 
-    def _get_line(self, code: str, line_number: Optional[int]) -> Optional[str]:
+    def _get_line(self, code: str, line_number: int | None) -> str | None:
         """Get a specific line from code.
 
         Args:
@@ -383,7 +382,7 @@ class CodeValidator:
         else:
             return f"Code is invalid: {error_count} error(s), {warning_count} warning(s), {info_count} info message(s)"
 
-    def fix_issues(self, code: str, issues: List[ValidationIssue]) -> str:
+    def fix_issues(self, code: str, issues: list[ValidationIssue]) -> str:
         """Attempt to automatically fix validation issues.
 
         Args:
@@ -406,7 +405,7 @@ class CodeValidator:
 
         return fixed_code
 
-    def validate_batch(self, codes: List[str]) -> List[ValidationResult]:
+    def validate_batch(self, codes: list[str]) -> list[ValidationResult]:
         """Validate multiple code snippets.
 
         Args:

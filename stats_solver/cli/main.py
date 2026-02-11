@@ -1,7 +1,6 @@
 """Main CLI entry point for stats_solver."""
 
 import logging
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -20,7 +19,7 @@ app = typer.Typer(
 )
 
 # Global state
-llm_manager: Optional[LLMManager] = None
+llm_manager: LLMManager | None = None
 
 
 @app.callback()
@@ -75,7 +74,7 @@ def recommend(
 @app.command()
 def generate(
     skill_id: str = typer.Argument(..., help="Skill ID to generate code for"),
-    output: Optional[str] = typer.Option(None, "--output", "-o", help="Output file path"),
+    output: str | None = typer.Option(None, "--output", "-o", help="Output file path"),
 ):
     """Generate Python code for a skill."""
     console.print(f"[bold cyan]Generating code for:[/bold cyan] {skill_id}")
@@ -197,9 +196,9 @@ def init():
 @app.command()
 def skills(
     action: str = typer.Argument("list", help="Action: list, search, show"),
-    category: Optional[str] = typer.Option(None, "--category", "-c", help="Filter by category"),
-    tag: Optional[str] = typer.Option(None, "--tag", "-t", help="Filter by tag"),
-    data_type: Optional[str] = typer.Option(None, "--data-type", "-d", help="Filter by data type"),
+    category: str | None = typer.Option(None, "--category", "-c", help="Filter by category"),
+    tag: str | None = typer.Option(None, "--tag", "-t", help="Filter by tag"),
+    data_type: str | None = typer.Option(None, "--data-type", "-d", help="Filter by data type"),
 ):
     """Manage and browse skills."""
     if action == "list":
@@ -228,8 +227,8 @@ def skills(
 @app.command()
 def config(
     action: str = typer.Argument("list", help="Action: list, get, set, validate"),
-    key: Optional[str] = typer.Argument(None, help="Configuration key"),
-    value: Optional[str] = typer.Argument(None, help="Configuration value"),
+    key: str | None = typer.Argument(None, help="Configuration key"),
+    value: str | None = typer.Argument(None, help="Configuration value"),
 ):
     """Manage configuration."""
     if action == "list" or action == "get" and key is None:

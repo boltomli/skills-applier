@@ -1,7 +1,7 @@
 """Output format recognition for problem analysis."""
 
 import logging
-from typing import List, Dict, Optional, Any
+from typing import Any
 from enum import Enum
 import re
 
@@ -70,11 +70,11 @@ class OutputFormatDetectionResult(BaseModel):
     """Result of output format detection."""
 
     primary_format: OutputFormat
-    secondary_formats: List[OutputFormat]
+    secondary_formats: list[OutputFormat]
     confidence: float
     reasoning: str
-    required_elements: List[str]
-    optional_elements: List[str]
+    required_elements: list[str]
+    optional_elements: list[str]
 
 
 class OutputFormatRecognizer:
@@ -236,7 +236,7 @@ class OutputFormatRecognizer:
         ],
     }
 
-    def __init__(self, use_llm: bool = False, llm_provider: Optional[LLMProvider] = None) -> None:
+    def __init__(self, use_llm: bool = False, llm_provider: LLMProvider | None = None) -> None:
         """Initialize output format recognizer.
 
         Args:
@@ -348,8 +348,8 @@ Return a JSON object with:
             return self._recognize_with_rules(text)
 
     def _find_secondary_formats(
-        self, primary_format: OutputFormat, scores: Dict[OutputFormat, float]
-    ) -> List[OutputFormat]:
+        self, primary_format: OutputFormat, scores: dict[OutputFormat, float]
+    ) -> list[OutputFormat]:
         """Find secondary formats related to the primary format.
 
         Args:
@@ -379,8 +379,8 @@ Return a JSON object with:
     def _generate_reasoning(
         self,
         primary_format: OutputFormat,
-        secondary_formats: List[OutputFormat],
-        scores: Dict[OutputFormat, float],
+        secondary_formats: list[OutputFormat],
+        scores: dict[OutputFormat, float],
     ) -> str:
         """Generate reasoning for the recognition.
 
@@ -411,7 +411,7 @@ Return a JSON object with:
 
     def _extract_elements(
         self, text: str, primary_format: OutputFormat
-    ) -> tuple[List[str], List[str]]:
+    ) -> tuple[list[str], list[str]]:
         """Extract required and optional elements.
 
         Args:
@@ -447,7 +447,7 @@ Return a JSON object with:
 
         return required, optional
 
-    def _calculate_confidence(self, scores: Dict[OutputFormat, float]) -> float:
+    def _calculate_confidence(self, scores: dict[OutputFormat, float]) -> float:
         """Calculate confidence in the recognition.
 
         Args:
@@ -469,7 +469,7 @@ Return a JSON object with:
         # Confidence based on dominance of top score
         return max_score / sum_scores
 
-    def get_format_requirements(self, output_format: OutputFormat) -> Dict[str, Any]:
+    def get_format_requirements(self, output_format: OutputFormat) -> dict[str, Any]:
         """Get typical requirements for an output format.
 
         Args:

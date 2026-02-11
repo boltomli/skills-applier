@@ -2,7 +2,7 @@
 
 import logging
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any
 
 from rich.console import Console
 
@@ -13,7 +13,7 @@ console = Console()
 class CodeOutputHandler:
     """Handler for code output and file saving."""
 
-    def __init__(self, output_dir: Optional[Path] = None):
+    def __init__(self, output_dir: Path | None = None):
         """Initialize output handler.
 
         Args:
@@ -26,7 +26,7 @@ class CodeOutputHandler:
         """Ensure output directory exists."""
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-    def save_code(self, code: str, filename: str, subdirectory: Optional[str] = None) -> Path:
+    def save_code(self, code: str, filename: str, subdirectory: str | None = None) -> Path:
         """Save code to a file.
 
         Args:
@@ -73,7 +73,7 @@ class CodeOutputHandler:
         return self.save_code(requirements_content, filename)
 
     def save_markdown_report(
-        self, title: str, sections: Dict[str, str], filename: str = "report.md"
+        self, title: str, sections: dict[str, str], filename: str = "report.md"
     ) -> Path:
         """Save a markdown report.
 
@@ -95,7 +95,7 @@ class CodeOutputHandler:
         report_content = "\n".join(lines)
         return self.save_code(report_content, filename)
 
-    def save_json(self, data: Dict[str, Any], filename: str) -> Path:
+    def save_json(self, data: dict[str, Any], filename: str) -> Path:
         """Save data as JSON.
 
         Args:
@@ -228,8 +228,8 @@ This script was automatically generated based on a statistical analysis recommen
         )
 
     def save_with_confirmation(
-        self, code: str, filename: str, subdirectory: Optional[str] = None, overwrite: bool = False
-    ) -> Optional[Path]:
+        self, code: str, filename: str, subdirectory: str | None = None, overwrite: bool = False
+    ) -> Path | None:
         """Save code with overwrite confirmation.
 
         Args:

@@ -1,7 +1,7 @@
 """Code generator for creating Python solutions."""
 
 import logging
-from typing import List, Dict, Optional, Any
+from typing import Any
 from dataclasses import dataclass
 
 from ..skills.metadata_schema import SkillMetadata
@@ -18,9 +18,9 @@ class GeneratedCode:
     """Generated Python code."""
 
     code: str
-    imports: List[str]
+    imports: list[str]
     docstring: str
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 @dataclass
@@ -29,9 +29,9 @@ class GenerationContext:
 
     skill: SkillMetadata
     problem_description: str
-    data_description: Optional[str] = None
-    output_requirements: Optional[str] = None
-    additional_context: Dict[str, Any] = None
+    data_description: str | None = None
+    output_requirements: str | None = None
+    additional_context: dict[str, Any] = None
 
 
 class CodeGenerator:
@@ -39,8 +39,8 @@ class CodeGenerator:
 
     def __init__(
         self,
-        llm_provider: Optional[LLMProvider] = None,
-        template_manager: Optional[TemplateManager] = None,
+        llm_provider: LLMProvider | None = None,
+        template_manager: TemplateManager | None = None,
     ) -> None:
         """Initialize code generator.
 
@@ -213,8 +213,8 @@ Requirements:
         return "\n".join(lines)
 
     async def generate_multiple(
-        self, contexts: List[GenerationContext], use_llm: bool = False
-    ) -> List[GeneratedCode]:
+        self, contexts: list[GenerationContext], use_llm: bool = False
+    ) -> list[GeneratedCode]:
         """Generate code for multiple contexts.
 
         Args:
@@ -256,7 +256,7 @@ Requirements:
         return "\n".join(script_parts)
 
     async def generate_with_chain(
-        self, contexts: List[GenerationContext], chain_description: str, use_llm: bool = False
+        self, contexts: list[GenerationContext], chain_description: str, use_llm: bool = False
     ) -> str:
         """Generate a complete script from a chain of contexts.
 

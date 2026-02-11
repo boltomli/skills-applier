@@ -3,14 +3,14 @@ Mock data for testing the stats solver system.
 """
 
 import numpy as np
-from typing import Dict, List, Any
+from typing import Any
 
 
 class MockLLMResponses:
     """Mock LLM responses for testing."""
 
     @staticmethod
-    def problem_analysis_response() -> Dict[str, Any]:
+    def problem_analysis_response() -> dict[str, Any]:
         """Mock response for problem analysis."""
         return {
             "summary": "Compare test scores between two classes to test for significant difference",
@@ -34,7 +34,7 @@ class MockLLMResponses:
         }
 
     @staticmethod
-    def recommendation_response() -> Dict[str, Any]:
+    def recommendation_response() -> dict[str, Any]:
         """Mock response for recommendation."""
         return {
             "primary_recommendation": {
@@ -91,7 +91,7 @@ class MockLLMResponses:
         }
 
     @staticmethod
-    def code_generation_response() -> Dict[str, Any]:
+    def code_generation_response() -> dict[str, Any]:
         """Mock response for code generation."""
         return {
             "code": '''import numpy as np
@@ -141,7 +141,7 @@ class MockSkillData:
     """Mock skill data for testing."""
 
     @staticmethod
-    def statistical_methods() -> List[Dict[str, Any]]:
+    def statistical_methods() -> list[dict[str, Any]]:
         """Mock statistical methods."""
         return [
             {
@@ -189,7 +189,7 @@ class MockSkillData:
         ]
 
     @staticmethod
-    def mathematical_implementations() -> List[Dict[str, Any]]:
+    def mathematical_implementations() -> list[dict[str, Any]]:
         """Mock mathematical implementations."""
         return [
             {
@@ -223,7 +223,7 @@ class MockSkillData:
         ]
 
     @staticmethod
-    def visualization_skills() -> List[Dict[str, Any]]:
+    def visualization_skills() -> list[dict[str, Any]]:
         """Mock visualization skills."""
         return [
             {
@@ -261,7 +261,7 @@ class MockProblemData:
     """Mock problem data for testing."""
 
     @staticmethod
-    def hypothesis_test_problem() -> Dict[str, Any]:
+    def hypothesis_test_problem() -> dict[str, Any]:
         """Mock hypothesis test problem."""
         return {
             "description": "I have test scores from two different classes and want to know if there's a significant difference between them.",
@@ -271,7 +271,7 @@ class MockProblemData:
         }
 
     @staticmethod
-    def regression_problem() -> Dict[str, Any]:
+    def regression_problem() -> dict[str, Any]:
         """Mock regression problem."""
         return {
             "description": "I want to predict house prices based on square footage and number of bedrooms.",
@@ -281,7 +281,7 @@ class MockProblemData:
         }
 
     @staticmethod
-    def classification_problem() -> Dict[str, Any]:
+    def classification_problem() -> dict[str, Any]:
         """Mock classification problem."""
         return {
             "description": "I want to classify customers into different segments based on their purchasing behavior.",
@@ -291,7 +291,7 @@ class MockProblemData:
         }
 
     @staticmethod
-    def visualization_problem() -> Dict[str, Any]:
+    def visualization_problem() -> dict[str, Any]:
         """Mock visualization problem."""
         return {
             "description": "I want to visualize the distribution of my data using a histogram.",
@@ -336,7 +336,7 @@ class MockSampleData:
         return trend + noise
 
     @staticmethod
-    def generate_mixed_data(size: int = 50) -> Dict[str, np.ndarray]:
+    def generate_mixed_data(size: int = 50) -> dict[str, np.ndarray]:
         """Generate mock mixed data types."""
         return {
             "numerical": np.random.normal(50, 10, size),

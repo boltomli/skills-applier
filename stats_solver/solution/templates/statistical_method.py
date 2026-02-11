@@ -1,6 +1,6 @@
 """Template for statistical methods."""
 
-from typing import Dict, Any
+from typing import Any
 from .base import BaseTemplate
 
 
@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
         return self.TEMPLATE.format(**variables)
 
-    def _get_implementation(self, kwargs: Dict[str, Any]) -> str:
+    def _get_implementation(self, kwargs: dict[str, Any]) -> str:
         """Get implementation code based on dependencies.
 
         Args:
@@ -88,7 +88,7 @@ if __name__ == "__main__":
         else:
             return "result = analyze_data(data)  # Implement your analysis here"
 
-    def _get_return_value(self, kwargs: Dict[str, Any]) -> str:
+    def _get_return_value(self, kwargs: dict[str, Any]) -> str:
         """Get return value expression.
 
         Args:
