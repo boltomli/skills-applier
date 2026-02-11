@@ -37,38 +37,188 @@ def main(
 
 @app.command()
 def solve(
+    problem: str = typer.Argument(None, help="Problem description to solve"),
+    method: str = typer.Option(
+        "auto", "--method", "-m", help="Method to use (auto, template, llm)"
+    ),
+    output: str = typer.Option("file", "--output", "-o", help="Output format (file, stdout)"),
+):
+    """Generate complete solution code for a problem."""
+    if problem is None:
+        console.print("[bold cyan]Describe your data problem:[/bold cyan] ", end="")
+        problem = input()
+
+    console.print(f"[bold cyan]Solving problem:[/bold cyan] {problem}")
+
+    # This will generate complete code solutions
+    console.print("\n[yellow]Solution generation feature coming soon![/yellow]")
+    console.print("This will generate complete Python code solutions for your problem.")
+
+
+@app.command()
+def recommend(
     problem: str = typer.Argument(None, help="Problem description to analyze"),
     method: str = typer.Option(
         "auto", "--method", "-m", help="Method to use (auto, template, llm)"
     ),
-    output: str = typer.Option(
-        "markdown", "--output", "-o", help="Output format (markdown, json, code)"
-    ),
+    output: str = typer.Option("markdown", "--output", "-o", help="Output format (markdown, json)"),
+    top_k: int = typer.Option(5, "--top", "-k", help="Number of recommendations to show"),
 ):
-    """Get recommendations and generate solutions."""
+    """Get skill recommendations for a problem."""
+    import asyncio
+    from ..problem.extractor import ProblemExtractor
+    from ..problem.classifier import ProblemClassifier
+    from ..problem.data_types import DataTypeDetector
+    from ..recommendation.matcher import SkillMatcher
+    from ..recommendation.scorer import RecommendationScorer
+    from ..skills.index import SkillIndex
+    from ..llm.manager import LLMManager
+
     if problem is None:
         console.print("[bold cyan]Describe your data problem:[/bold cyan] ", end="")
         problem = input()
 
     console.print(f"[bold cyan]Analyzing problem:[/bold cyan] {problem}")
 
-    # This will be implemented with full integration
-    console.print("\n[yellow]Analysis feature coming soon![/yellow]")
-    console.print("This will analyze your problem and recommend appropriate statistical methods.")
+    async def _recommend():
+        global llm_manager
 
+        # Initialize LLM manager if not already done
+        if llm_manager is None:
+            try:
+                llm_manager = LLMManager.from_env()
+                await llm_manager.initialize()
+            except Exception as e:
+                console.print(f"[yellow]![/yellow] LLM not available: {e}")
+                console.print("[dim]Continuing with rule-based analysis...[/dim]")
 
-@app.command()
-def recommend(
-    query: str = typer.Argument(..., help="Query for skill recommendations"),
-    top_k: int = typer.Option(5, "--top", "-k", help="Number of recommendations"),
-):
-    """Get skill recommendations for a query."""
-    console.print(f"[bold cyan]Searching for:[/bold cyan] {query}")
-    console.print(f"[dim]Top {top_k} recommendations[/dim]")
+        # Determine if we should use LLM
+        use_llm = method == "llm" or (method == "auto" and llm_manager is not None)
 
-    # This will be implemented with full integration
-    console.print("\n[yellow]Recommendation feature coming soon![/yellow]")
-    console.print("This will search the skill index and recommend relevant skills.")
+        # Step 1: Extract problem features
+        console.print("\n[cyan]Extracting problem features...[/cyan]")
+        extractor = ProblemExtractor(
+            use_llm=use_llm, llm_provider=llm_manager.provider if llm_manager else None
+        )
+        problem_features = await extractor.extract(problem)
+
+        # Display problem summary
+        console.print(f"[dim]Problem Type:[/dim] {problem_features.problem_type}")
+        console.print(
+            f"[dim]Data Types:[/dim] {', '.join(dt.value for dt in problem_features.data_types)}"
+        )
+        console.print(f"[dim]Primary Goal:[/dim] {problem_features.primary_goal}")
+
+        # Step 2: Detect data types
+        console.print("\n[cyan]Detecting data types...[/cyan]")
+        data_type_detector = DataTypeDetector(
+            use_llm=use_llm, llm_provider=llm_manager.provider if llm_manager else None
+        )
+        data_type_result = await data_type_detector.detect(problem)
+
+        # Step 3: Classify problem type
+        console.print("\n[cyan]Classifying problem...[/cyan]")
+        classifier = ProblemClassifier(
+            use_llm=use_llm, llm_provider=llm_manager.provider if llm_manager else None
+        )
+        classification = await classifier.classify(problem, data_type_result)
+
+        console.print(f"[dim]Classification:[/dim] {classification.primary_type.value}")
+        console.print(f"[dim]Confidence:[/dim] {classification.confidence:.2f}")
+
+        # Step 4: Load skills
+        console.print("\n[cyan]Loading skills...[/cyan]")
+        skill_index = SkillIndex()
+        await skill_index.load()
+
+        skills = skill_index.get_all_skills()
+        console.print(f"[dim]Loaded {len(skills)} skills[/dim]")
+
+        # Step 5: Match skills
+        console.print("\n[cyan]Matching skills to problem...[/cyan]")
+        matcher = SkillMatcher(
+            use_llm=use_llm, llm_provider=llm_manager.provider if llm_manager else None
+        )
+        match_results = await matcher.match(
+            skills,
+            problem_features,
+            classification.primary_type,
+            data_type_result,
+            None,  # No specific output format
+            top_k=top_k * 2,  # Get more candidates for better filtering
+        )
+
+        # Step 6: Score and rank recommendations
+        console.print("\n[cyan]Scoring recommendations...[/cyan]")
+        scorer = RecommendationScorer()
+        recommendations = scorer.score_recommendations(match_results, max_recommendations=top_k)
+
+        # Display recommendations
+        console.print("\n[bold green]Recommended Skills:[/bold green]\n")
+
+        if not recommendations:
+            console.print(
+                "[yellow]No matching skills found. Try a different problem description.[/yellow]"
+            )
+            return
+
+        if output == "json":
+            import json
+
+            recs_json = [
+                {
+                    "rank": rec.ranking_position,
+                    "name": rec.skill.name,
+                    "id": rec.skill.id,
+                    "score": rec.final_score,
+                    "confidence": rec.confidence,
+                    "match_reasons": rec.match_reasons,
+                    "description": rec.skill.description,
+                }
+                for rec in recommendations
+            ]
+            console.print(json.dumps(recs_json, indent=2))
+        else:  # markdown
+            # Display in table format
+            table = Table(show_header=True, header_style="bold magenta")
+            table.add_column("#", style="cyan", width=4)
+            table.add_column("Skill", style="green", width=30)
+            table.add_column("Category", width=20)
+            table.add_column("Score", width=8)
+            table.add_column("Reason", width=40)
+
+            for rec in recommendations:
+                reason = rec.match_reasons[0] if rec.match_reasons else "Good match"
+                reason = reason[:37] + "..." if len(reason) > 37 else reason
+                table.add_row(
+                    str(rec.ranking_position),
+                    rec.skill.name,
+                    rec.skill.category.value,
+                    f"{rec.final_score:.2f}",
+                    reason,
+                )
+
+            console.print(table)
+
+            # Show top recommendation details
+            if recommendations:
+                top_rec = recommendations[0]
+                console.print(f"\n[bold cyan]Top Recommendation: {top_rec.skill.name}[/bold cyan]")
+                console.print(f"[dim]{top_rec.skill.description}[/dim]")
+                console.print(f"\n[dim]Match Score: {top_rec.match_score:.2f}[/dim]")
+                console.print(f"[dim]Confidence: {top_rec.confidence:.2f}[/dim]")
+
+                if top_rec.match_reasons:
+                    console.print("\n[bold]Why this skill?[/bold]")
+                    for reason in top_rec.match_reasons[:3]:
+                        console.print(f"  • {reason}")
+
+                if top_rec.skill.tags:
+                    console.print(f"\n[dim]Tags: {', '.join(top_rec.skill.tags)}[/dim]")
+
+        console.print(f"\n[dim]Found {len(recommendations)} matching skills[/dim]")
+
+    asyncio.run(_recommend())
 
 
 @app.command()
