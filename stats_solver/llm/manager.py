@@ -92,6 +92,16 @@ class LLMManager:
                 setattr(self.config, key, value)
                 logger.info(f"Updated config: {key} = {value}")
 
+    async def health_check(self) -> dict:
+        """Perform health check on LLM service."""
+        if not self._provider:
+            return {
+                "available": False,
+                "provider": self.config.provider,
+                "error": "LLM manager not initialized",
+            }
+        return await self._provider.health_check()
+
     @classmethod
     def from_env(cls) -> "LLMManager":
         """Create LLM manager from environment variables."""

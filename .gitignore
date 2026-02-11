@@ -3,3 +3,4 @@ openspec/
 *.egg-info/
 *.log
 __pycache__/
+.env
