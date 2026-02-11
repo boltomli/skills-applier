@@ -182,15 +182,103 @@ def init():
         except Exception as e:
             console.print(f"[red]✗[/red] LLM initialization error: {e}")
 
+        # Scan skills
+        console.print("\n[cyan]Scanning skills...[/cyan]")
+        from ..skills.scanner import SkillScanner
+        from ..skills.index import SkillIndex
+        from ..skills.classifier import SkillClassifier
+        from ..cli.config import ConfigManager
+        from pathlib import Path
+
+        # Load configuration
+        config_manager = ConfigManager()
+        skill_base_paths = config_manager.config.skill_base_paths
+
+        # Check if configured paths exist, otherwise use default
+        valid_paths = []
+        for path_str in skill_base_paths:
+            path = Path(path_str)
+            if path.exists():
+                valid_paths.append(str(path))
+            else:
+                console.print(f"[dim]Path not found: {path_str}[/dim]")
+
+        # Determine if we should ignore example metadata
+        use_configured_paths = bool(valid_paths)
+
+        # Default to data/skills_metadata if no valid paths configured
+        if not valid_paths:
+            default_metadata_path = Path("data/skills_metadata")
+            if default_metadata_path.exists():
+                valid_paths = [str(default_metadata_path)]
+                console.print(f"[dim]Using default skills path: {default_metadata_path}[/dim]")
+            else:
+                console.print(
+                    "[yellow]![/yellow] No valid skill paths configured and no default path found"
+                )
+                console.print("[dim]Configure SKILL_BASE_PATH in .env or config/default.yaml[/dim]")
+                console.print("\n[green]Initialization complete! (No skills scanned)[/green]")
+                return
+
+        # Initialize scanner with ignore_example if using configured paths
+        scanner = SkillScanner(valid_paths, ignore_example=use_configured_paths)
+        scanned_skills = scanner.scan_all()
+
+        if not scanned_skills:
+            console.print("[yellow]![/yellow] No skills found in configured paths")
+            console.print("[cyan]Falling back to default skills metadata...[/cyan]")
+
+            # Try default path without ignore_example
+            default_metadata_path = Path("data/skills_metadata")
+            if default_metadata_path.exists():
+                scanner = SkillScanner([str(default_metadata_path)], ignore_example=False)
+                scanned_skills = scanner.scan_all()
+
+        if not scanned_skills:
+            console.print("[yellow]![/yellow] No skills found")
+            console.print("\n[green]Initialization complete! (No skills found)[/green]")
+            return
+
+        console.print(f"[green]✓[/green] Found {len(scanned_skills)} skills")
+
+        # Initialize index
+        index = SkillIndex()
+        await index.load()
+
+        # Classify skills
+        use_llm_classification = config_manager.config.enable_llm_classification
+        classifier = SkillClassifier(
+            use_llm=use_llm_classification and llm_manager is not None,
+            llm_provider=llm_manager.provider if llm_manager else None,
+        )
+
+        if use_llm_classification and llm_manager:
+            console.print("[cyan]Classifying skills with LLM...[/cyan]")
+        else:
+            console.print("[cyan]Classifying skills with rules...[/cyan]")
+
+        classified_skills = await classifier.batch_classify(scanned_skills)
+
+        # Add to index
+        for skill in classified_skills:
+            index.add_skill(skill)
+
+        # Save index
+        await index.save()
+
+        # Display statistics
+        stats = index.get_statistics()
+        console.print(f"[green]✓[/green] Indexed {stats['total_skills']} skills")
+
+        if stats["categories"]:
+            console.print("\n[bold cyan]Skills by Category:[/bold cyan]")
+            for category, count in stats["categories"].items():
+                console.print(f"  • {category}: {count}")
+
+        console.print("\n[green]Initialization complete![/green]")
+
     # Run async initialization
     asyncio.run(_init())
-
-    # Scan skills
-    console.print("\n[cyan]Scanning skills...[/cyan]")
-    # This will be implemented with full integration
-    console.print("[yellow]![/yellow] Skill scanning coming soon")
-
-    console.print("\n[green]Initialization complete![/green]")
 
 
 @app.command()
@@ -199,29 +287,184 @@ def skills(
     category: str | None = typer.Option(None, "--category", "-c", help="Filter by category"),
     tag: str | None = typer.Option(None, "--tag", "-t", help="Filter by tag"),
     data_type: str | None = typer.Option(None, "--data-type", "-d", help="Filter by data type"),
+    skill_id: str | None = typer.Option(None, "--id", help="Skill ID (for show action)"),
 ):
     """Manage and browse skills."""
-    if action == "list":
-        console.print("[bold cyan]Available Skills[/bold cyan]\n")
-        if category:
-            console.print(f"[dim]Category: {category}[/dim]\n")
-        # This will be implemented with full integration
-        console.print("[yellow]Skill browser coming soon![/yellow]")
-        console.print("This will display and filter available statistical and mathematical skills.")
-    elif action == "search":
-        console.print("[bold cyan]Search Skills[/bold cyan]\n")
-        if tag:
-            console.print(f"[dim]Tag: {tag}[/dim]\n")
-        if data_type:
-            console.print(f"[dim]Data Type: {data_type}[/dim]\n")
-        # This will be implemented with full integration
-        console.print("[yellow]Skill search coming soon![/yellow]")
-    elif action == "show":
-        console.print("[bold cyan]Show Skill Details[/bold cyan]\n")
-        console.print("[yellow]Skill details coming soon![/yellow]")
-    else:
-        console.print(f"[red]Unknown action: {action}[/red]")
-        console.print("Use: skills-applier skills [list|search|show] [options]")
+    import asyncio
+    from ..skills.index import SkillIndex
+    from ..skills.metadata_schema import SkillCategory, DataType
+
+    async def _run_skills():
+        index = SkillIndex()
+        await index.load()
+
+        if action == "list":
+            console.print("[bold cyan]Available Skills[/bold cyan]\n")
+
+            # Filter skills
+            skills_list = index.get_all_skills()
+
+            if category:
+                try:
+                    cat_enum = SkillCategory(category)
+                    skills_list = index.get_by_category(cat_enum)
+                    console.print(f"[dim]Category: {category}[/dim]\n")
+                except ValueError:
+                    console.print(f"[red]Invalid category: {category}[/red]")
+                    console.print(
+                        f"[dim]Valid categories: {[c.value for c in SkillCategory]}[/dim]"
+                    )
+                    return
+
+            if tag:
+                skills_list = [s for s in skills_list if tag in s.tags]
+                console.print(f"[dim]Tag: {tag}[/dim]\n")
+
+            if data_type:
+                try:
+                    dt_enum = DataType(data_type)
+                    skills_list = index.filter_by_data_type(dt_enum)
+                    console.print(f"[dim]Data Type: {data_type}[/dim]\n")
+                except ValueError:
+                    console.print(f"[red]Invalid data type: {data_type}[/red]")
+                    console.print(f"[dim]Valid data types: {[dt.value for dt in DataType]}[/dim]")
+                    return
+
+            if not skills_list:
+                console.print("[yellow]No skills found[/yellow]")
+                return
+
+            # Display skills in a table
+            table = Table(show_header=True, header_style="bold magenta")
+            table.add_column("ID", style="cyan", width=25)
+            table.add_column("Name", style="green", width=30)
+            table.add_column("Category", width=25)
+            table.add_column("Tags", width=20)
+
+            for skill in skills_list:
+                tags_str = ", ".join(skill.tags[:3])
+                if len(skill.tags) > 3:
+                    tags_str += "..."
+                table.add_row(skill.id, skill.name, skill.category.value, tags_str)
+
+            console.print(table)
+            console.print(f"\n[dim]Total: {len(skills_list)} skills[/dim]")
+
+        elif action == "search":
+            if not skill_id and not tag and not data_type:
+                console.print("[red]Error: Search requires a query term[/red]")
+                console.print("Use: skills-applier skills search --tag <tag> or --data-type <type>")
+                return
+
+            console.print("[bold cyan]Search Skills[/bold cyan]\n")
+
+            skills_list = []
+
+            if skill_id:
+                skills_list = index.search(skill_id)
+                console.print(f"[dim]Query: {skill_id}[/dim]\n")
+
+            if tag:
+                skills_list = index.get_by_tag(tag)
+                console.print(f"[dim]Tag: {tag}[/dim]\n")
+
+            if data_type:
+                try:
+                    dt_enum = DataType(data_type)
+                    skills_list = index.filter_by_data_type(dt_enum)
+                    console.print(f"[dim]Data Type: {data_type}[/dim]\n")
+                except ValueError:
+                    console.print(f"[red]Invalid data type: {data_type}[/red]")
+                    return
+
+            if not skills_list:
+                console.print("[yellow]No matching skills found[/yellow]")
+                return
+
+            # Display results
+            table = Table(show_header=True, header_style="bold magenta")
+            table.add_column("ID", style="cyan", width=25)
+            table.add_column("Name", style="green", width=30)
+            table.add_column("Category", width=25)
+            table.add_column("Description", width=40)
+
+            for skill in skills_list[:10]:  # Limit to 10 results
+                desc = (
+                    skill.description[:37] + "..."
+                    if len(skill.description) > 37
+                    else skill.description
+                )
+                table.add_row(skill.id, skill.name, skill.category.value, desc)
+
+            console.print(table)
+            console.print(f"\n[dim]Found {len(skills_list)} skills (showing first 10)[/dim]")
+
+        elif action == "show":
+            if not skill_id:
+                console.print("[red]Error: Show action requires --id <skill_id>[/red]")
+                console.print("Use: skills-applier skills show --id <skill_id>")
+                return
+
+            console.print(f"[bold cyan]Skill Details: {skill_id}[/bold cyan]\n")
+
+            skill = index.get_skill(skill_id)
+
+            if not skill:
+                console.print(f"[red]Skill '{skill_id}' not found[/red]")
+                return
+
+            # Display skill details
+            table = Table(show_header=False, box=None)
+            table.add_column("Field", style="cyan", width=20)
+            table.add_column("Value")
+
+            table.add_row("ID", skill.id)
+            table.add_row("Name", skill.name)
+            table.add_row("Category", skill.category.value)
+            table.add_row("Description", skill.description)
+            table.add_row("Path", skill.path)
+
+            if skill.tags:
+                table.add_row("Tags", ", ".join(skill.tags))
+
+            if skill.input_data_types:
+                table.add_row(
+                    "Input Data Types", ", ".join([dt.value for dt in skill.input_data_types])
+                )
+
+            if skill.output_format:
+                table.add_row("Output Format", skill.output_format)
+
+            if skill.dependencies:
+                table.add_row("Dependencies", ", ".join(skill.dependencies))
+
+            if skill.prerequisites:
+                table.add_row("Prerequisites", ", ".join(skill.prerequisites))
+
+            if skill.statistical_concept:
+                table.add_row("Statistical Concept", skill.statistical_concept)
+
+            if skill.assumptions:
+                table.add_row(
+                    "Assumptions", "\n" + "\n".join(f"  • {a}" for a in skill.assumptions)
+                )
+
+            if skill.use_cases:
+                table.add_row("Use Cases", "\n" + "\n".join(f"  • {u}" for u in skill.use_cases))
+
+            table.add_row("Source", skill.source)
+            table.add_row("Confidence", f"{skill.confidence:.2f}")
+
+            if skill.last_updated:
+                table.add_row("Last Updated", skill.last_updated)
+
+            console.print(table)
+
+        else:
+            console.print(f"[red]Unknown action: {action}[/red]")
+            console.print("Use: skills-applier skills [list|search|show] [options]")
+
+    asyncio.run(_run_skills())
 
 
 @app.command()
@@ -231,30 +474,68 @@ def config(
     value: str | None = typer.Argument(None, help="Configuration value"),
 ):
     """Manage configuration."""
-    if action == "list" or action == "get" and key is None:
+    from ..cli.config import ConfigManager
+
+    config_manager = ConfigManager()
+
+    if action == "list" or (action == "get" and key is None):
         # List configuration
         console.print("[bold cyan]Current Configuration[/bold cyan]\n")
+        config_manager.display_config()
 
-        table = Table(show_header=True, header_style="bold magenta")
-        table.add_column("Setting", style="cyan")
-        table.add_column("Value")
-        table.add_column("Description")
-
-        table.add_row("LLM_PROVIDER", "ollama", "LLM provider (ollama, lm_studio)")
-        table.add_row("LLM_HOST", "localhost", "LLM server host")
-        table.add_row("LLM_PORT", "11434", "LLM server port")
-        table.add_row("LLM_MODEL", "llama3", "Default LLM model")
-        table.add_row("LOG_LEVEL", "INFO", "Logging level")
-
-        console.print(table)
     elif action == "get" and key:
-        console.print(f"[bold cyan]{key}:[/bold cyan] (Configuration retrieval coming soon)")
+        # Get specific configuration value
+        config_value = config_manager.get(key)
+
+        if config_value is not None:
+            console.print(f"[bold cyan]{key}:[/bold cyan] {config_value}")
+        else:
+            console.print(f"[red]Configuration key not found: {key}[/red]")
+            console.print("[dim]Use 'skills-applier config list' to see all available keys[/dim]")
+
     elif action == "set" and key and value:
-        console.print(f"[yellow]Setting {key} = {value}[/yellow]")
-        console.print("[yellow]Configuration update coming soon![/yellow]")
+        # Set configuration value
+        # Handle boolean values
+        if value.lower() in ("true", "false"):
+            value_bool = value.lower() == "true"
+            success = config_manager.set(key, value_bool)
+        # Handle integer values
+        elif value.isdigit():
+            success = config_manager.set(key, int(value))
+        else:
+            success = config_manager.set(key, value)
+
+        if success:
+            console.print(f"[green]✓[/green] Set {key} = {value}")
+            # Save to file
+            if config_manager.save_config():
+                console.print("[green]✓[/green] Configuration saved")
+            else:
+                console.print("[yellow]![/yellow] Failed to save configuration to file")
+        else:
+            console.print(f"[red]✗[/red] Failed to set configuration: {key}")
+
     elif action == "validate":
-        console.print("[bold cyan]Validating configuration...[/bold cyan]")
-        console.print("[yellow]Configuration validation coming soon![/yellow]")
+        # Validate configuration
+        console.print("[bold cyan]Validating configuration...[/bold cyan]\n")
+
+        validation = config_manager.validate_config()
+
+        if validation["valid"]:
+            console.print("[green]✓[/green] Configuration is valid")
+        else:
+            console.print("[red]✗[/red] Configuration has errors")
+            for issue in validation["issues"]:
+                console.print(f"  [red]•[/red] {issue}")
+
+        if validation["warnings"]:
+            console.print("\n[yellow]Warnings:[/yellow]")
+            for warning in validation["warnings"]:
+                console.print(f"  [yellow]•[/yellow] {warning}")
+
+        if validation["valid"] and not validation["warnings"]:
+            console.print("\n[green]No issues found![/green]")
+
     else:
         console.print(f"[red]Unknown or incomplete action: {action}[/red]")
         console.print("Use: skills-applier config [list|get|set|validate] [key] [value]")

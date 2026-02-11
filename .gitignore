@@ -4,3 +4,4 @@ openspec/
 *.log
 __pycache__/
 .env
+data/

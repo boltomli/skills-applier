@@ -1,0 +1,177 @@
+{
+  "skills": [
+    {
+      "name": "Histogram Visualization",
+      "id": "histogram-visualization",
+      "path": "data\\examples",
+      "category": "visualization",
+      "tags": [
+        "visualization",
+        "plotting",
+        "distribution",
+        "histogram",
+        "histogram",
+        "distribution",
+        "plotting",
+        "visualization",
+        "matplotlib"
+      ],
+      "input_data_types": [
+        "numerical"
+      ],
+      "output_format": "matplotlib.figure.Figure",
+      "description": "Creates histogram plots to visualize the distribution of numerical data.",
+      "long_description": null,
+      "dependencies": [
+        "matplotlib",
+        "numpy"
+      ],
+      "prerequisites": [],
+      "use_cases": [],
+      "statistical_concept": "distribution",
+      "assumptions": [
+        "Data contains numerical values",
+        "Non-empty input array"
+      ],
+      "algorithm_name": null,
+      "complexity": null,
+      "confidence": 0.95,
+      "source": "llm",
+      "last_updated": null,
+      "custom_fields": {}
+    },
+    {
+      "name": "Fibonacci Sequence Generator",
+      "id": "fibonacci-sequence",
+      "path": "data\\examples",
+      "category": "algorithm",
+      "tags": [
+        "sequence",
+        "recursion",
+        "iteration",
+        "matrix",
+        "sequence",
+        "recursion",
+        "iteration",
+        "matrix",
+        "fibonacci"
+      ],
+      "input_data_types": [
+        "numerical"
+      ],
+      "output_format": "array",
+      "description": "Generates Fibonacci numbers using various algorithms including iterative, recursive, and matrix exponentiation methods.",
+      "long_description": null,
+      "dependencies": [
+        "numpy"
+      ],
+      "prerequisites": [],
+      "use_cases": [],
+      "statistical_concept": null,
+      "assumptions": [
+        "Input is a positive integer",
+        "Result fits within numerical precision"
+      ],
+      "algorithm_name": null,
+      "complexity": null,
+      "confidence": 0.9,
+      "source": "llm",
+      "last_updated": null,
+      "custom_fields": {}
+    },
+    {
+      "name": "Linear Regression",
+      "id": "linear-regression",
+      "path": "data\\examples",
+      "category": "statistical_method",
+      "tags": [
+        "regression",
+        "modeling",
+        "prediction",
+        "linear",
+        "regression",
+        "modeling",
+        "prediction",
+        "linear",
+        "machine_learning"
+      ],
+      "input_data_types": [
+        "numerical",
+        "mixed"
+      ],
+      "output_format": "object",
+      "description": "Performs linear regression analysis to model the relationship between a dependent variable and one or more independent variables.",
+      "long_description": null,
+      "dependencies": [
+        "numpy",
+        "scipy",
+        "sklearn"
+      ],
+      "prerequisites": [
+        "descriptive-statistics",
+        "correlation-analysis"
+      ],
+      "use_cases": [],
+      "statistical_concept": "regression",
+      "assumptions": [
+        "Linear relationship between variables",
+        "Independence of observations",
+        "Homoscedasticity",
+        "Normality of residuals"
+      ],
+      "algorithm_name": null,
+      "complexity": null,
+      "confidence": 0.95,
+      "source": "llm",
+      "last_updated": null,
+      "custom_fields": {}
+    },
+    {
+      "name": "Two-Sample T-Test",
+      "id": "t-test-two-sample",
+      "path": "data\\examples",
+      "category": "statistical_method",
+      "tags": [
+        "hypothesis_testing",
+        "mean_comparison",
+        "two_groups",
+        "parametric",
+        "hypothesis_testing",
+        "mean_comparison",
+        "two_groups",
+        "parametric"
+      ],
+      "input_data_types": [
+        "numerical"
+      ],
+      "output_format": "dictionary",
+      "description": "Performs an independent two-sample t-test to determine if there is a significant difference between the means of two groups.",
+      "long_description": null,
+      "dependencies": [
+        "numpy",
+        "scipy"
+      ],
+      "prerequisites": [],
+      "use_cases": [],
+      "statistical_concept": "hypothesis_testing",
+      "assumptions": [
+        "Samples are independent",
+        "Data is approximately normally distributed",
+        "Equal variances between groups (or use Welch's t-test)"
+      ],
+      "algorithm_name": null,
+      "complexity": null,
+      "confidence": 0.95,
+      "source": "llm",
+      "last_updated": null,
+      "custom_fields": {}
+    }
+  ],
+  "categories": {
+    "visualization": 1,
+    "algorithm": 1,
+    "statistical_method": 2
+  },
+  "last_updated": "2026-02-11T03:19:34.649065",
+  "total_skills": 4
+}
