@@ -6,6 +6,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 from rich.syntax import Syntax
+from rich.prompt import Confirm
 
 from .. import setup_logging
 from ..llm.manager import LLMManager
@@ -43,17 +44,148 @@ def solve(
         "auto", "--method", "-m", help="Method to use (auto, template, llm)"
     ),
     output: str = typer.Option("file", "--output", "-o", help="Output format (file, stdout)"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompt"),
 ):
     """Generate complete solution code for a problem."""
+    import asyncio
+    from pathlib import Path
+
+    from ..problem.extractor import ProblemExtractor
+    from ..problem.classifier import ProblemClassifier
+    from ..problem.data_types import DataTypeDetector
+    from ..recommendation.matcher import SkillMatcher
+    from ..recommendation.scorer import RecommendationScorer
+    from ..skills.index import SkillIndex
+    from ..solution.code_generator import CodeGenerator, GenerationContext
+    from ..llm.manager import LLMManager
+
     if problem is None:
         console.print("[bold cyan]Describe your data problem:[/bold cyan] ", end="")
         problem = input()
 
     console.print(f"[bold cyan]Solving problem:[/bold cyan] {problem}")
 
-    # This will generate complete code solutions
-    console.print("\n[yellow]Solution generation feature coming soon![/yellow]")
-    console.print("This will generate complete Python code solutions for your problem.")
+    async def _solve():
+        global llm_manager
+
+        # Initialize LLM manager if not already done
+        if llm_manager is None:
+            try:
+                llm_manager = LLMManager.from_env()
+                await llm_manager.initialize()
+            except Exception as e:
+                console.print(f"[yellow]![/yellow] LLM not available: {e}")
+                console.print("[dim]Continuing with rule-based analysis...[/dim]")
+
+        # Determine if we should use LLM
+        use_llm = method == "llm" or (method == "auto" and llm_manager is not None)
+
+        # Step 1: Extract problem features
+        console.print("\n[cyan]Step 1: Analyzing problem...[/cyan]")
+        extractor = ProblemExtractor(
+            use_llm=use_llm, llm_provider=llm_manager.provider if llm_manager else None
+        )
+        problem_features = await extractor.extract(problem)
+
+        console.print(f"[dim]Problem Type:[/dim] {problem_features.problem_type}")
+        console.print(
+            f"[dim]Data Types:[/dim] {', '.join(dt.value for dt in problem_features.data_types)}"
+        )
+        console.print(f"[dim]Primary Goal:[/dim] {problem_features.primary_goal}")
+
+        # Step 2: Detect data types
+        console.print("\n[cyan]Step 2: Detecting data types...[/cyan]")
+        data_type_detector = DataTypeDetector(
+            use_llm=use_llm, llm_provider=llm_manager.provider if llm_manager else None
+        )
+        data_type_result = await data_type_detector.detect(problem)
+
+        # Step 3: Classify problem type
+        console.print("\n[cyan]Step 3: Classifying problem...[/cyan]")
+        classifier = ProblemClassifier(
+            use_llm=use_llm, llm_provider=llm_manager.provider if llm_manager else None
+        )
+        classification = await classifier.classify(problem, data_type_result)
+
+        console.print(f"[dim]Classification:[/dim] {classification.primary_type.value}")
+        console.print(f"[dim]Confidence:[/dim] {classification.confidence:.2f}")
+
+        # Step 4: Load skills
+        console.print("\n[cyan]Step 4: Loading skills...[/cyan]")
+        skill_index = SkillIndex()
+        await skill_index.load()
+
+        skills = skill_index.get_all_skills()
+        console.print(f"[dim]Loaded {len(skills)} skills[/dim]")
+
+        # Step 5: Match skills
+        console.print("\n[cyan]Step 5: Finding best solution...[/cyan]")
+        matcher = SkillMatcher(
+            use_llm=use_llm, llm_provider=llm_manager.provider if llm_manager else None
+        )
+        match_results = await matcher.match(
+            skills,
+            problem_features,
+            classification.primary_type,
+            data_type_result,
+            None,
+            top_k=10,
+        )
+
+        # Step 6: Score and rank recommendations
+        scorer = RecommendationScorer()
+        recommendations = scorer.score_recommendations(match_results, max_recommendations=3)
+
+        if not recommendations:
+            console.print("[yellow]No suitable solutions found.[/yellow]")
+            return
+
+        # Show top recommendation
+        top_rec = recommendations[0]
+        console.print(f"\n[bold green]Best Solution:[/bold green] {top_rec.skill.name}")
+        console.print(f"[dim]{top_rec.skill.description}[/dim]")
+        console.print(f"[dim]Confidence: {top_rec.confidence:.2f}[/dim]")
+
+        # Ask for confirmation
+        if not yes and not Confirm.ask("\nGenerate code for this solution?", default=True):
+            console.print("[yellow]Solution generation cancelled.[/yellow]")
+            return
+
+        # Step 7: Generate code
+        console.print("\n[cyan]Step 6: Generating code...[/cyan]")
+
+        code_generator = CodeGenerator(llm_provider=llm_manager.provider if llm_manager else None)
+
+        context = GenerationContext(
+            skill=top_rec.skill,
+            problem_description=problem,
+            data_description="Your data",
+            output_requirements="Result",
+        )
+
+        try:
+            generated = await code_generator.generate(context, use_llm=use_llm)
+            full_code = code_generator.format_code(generated)
+
+            # Output code
+            if output == "file":
+                # Write to file
+                filename = f"{top_rec.skill.id.replace('-', '_')}_solution.py"
+                output_path = Path(filename)
+                output_path.write_text(full_code, encoding="utf-8")
+                console.print(f"[green]✓[/green] Code written to: {filename}")
+            else:
+                # Print to console
+                console.print("\n[bold green]Generated Solution:[/bold green]\n")
+                console.print(Syntax(full_code, "python", theme="monokai", line_numbers=True))
+
+            console.print(f"\n[dim]Method: {generated.metadata.get('method', 'unknown')}[/dim]")
+
+        except Exception as e:
+            console.print(f"[red]Error generating code: {e}[/red]")
+            logger.error(f"Code generation failed: {e}")
+
+    asyncio.run(_solve())
 
 
 @app.command()
