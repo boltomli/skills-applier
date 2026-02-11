@@ -438,6 +438,7 @@ def skills(
     tag: str | None = typer.Option(None, "--tag", "-t", help="Filter by tag"),
     data_type: str | None = typer.Option(None, "--data-type", "-d", help="Filter by data type"),
     skill_id: str | None = typer.Option(None, "--id", help="Skill ID (for show action)"),
+    output: str = typer.Option("table", "--output", "-o", help="Output format (table, json)"),
 ):
     """Manage and browse skills."""
     import asyncio
@@ -484,21 +485,35 @@ def skills(
                 console.print("[yellow]No skills found[/yellow]")
                 return
 
-            # Display skills in a table
-            table = Table(show_header=True, header_style="bold magenta")
-            table.add_column("ID", style="cyan", width=25)
-            table.add_column("Name", style="green", width=30)
-            table.add_column("Category", width=25)
-            table.add_column("Tags", width=20)
+            # Display skills
+            if output == "json":
+                import json
 
-            for skill in skills_list:
-                tags_str = ", ".join(skill.tags[:3])
-                if len(skill.tags) > 3:
-                    tags_str += "..."
-                table.add_row(skill.id, skill.name, skill.category.value, tags_str)
+                skills_json = [
+                    {
+                        "id": skill.id,
+                        "name": skill.name,
+                        "category": skill.category.value,
+                        "tags": skill.tags,
+                        "description": skill.description,
+                    }
+                    for skill in skills_list
+                ]
+                console.print(json.dumps(skills_json, indent=2))
+            else:
+                # Display skills in a table
+                table = Table(show_header=True, header_style="bold magenta")
+                table.add_column("ID", style="cyan")
+                table.add_column("Name", style="green")
+                table.add_column("Category", width=25)
+                table.add_column("Tags")
 
-            console.print(table)
-            console.print(f"\n[dim]Total: {len(skills_list)} skills[/dim]")
+                for skill in skills_list:
+                    tags_str = ", ".join(skill.tags)
+                    table.add_row(skill.id, skill.name, skill.category.value, tags_str)
+
+                console.print(table)
+                console.print(f"\n[dim]Total: {len(skills_list)} skills[/dim]")
 
         elif action == "search":
             if not skill_id and not tag and not data_type:
@@ -532,22 +547,32 @@ def skills(
                 return
 
             # Display results
-            table = Table(show_header=True, header_style="bold magenta")
-            table.add_column("ID", style="cyan", width=25)
-            table.add_column("Name", style="green", width=30)
-            table.add_column("Category", width=25)
-            table.add_column("Description", width=40)
+            if output == "json":
+                import json
 
-            for skill in skills_list[:10]:  # Limit to 10 results
-                desc = (
-                    skill.description[:37] + "..."
-                    if len(skill.description) > 37
-                    else skill.description
-                )
-                table.add_row(skill.id, skill.name, skill.category.value, desc)
+                skills_json = [
+                    {
+                        "id": skill.id,
+                        "name": skill.name,
+                        "category": skill.category.value,
+                        "description": skill.description,
+                    }
+                    for skill in skills_list
+                ]
+                console.print(json.dumps(skills_json, indent=2))
+            else:
+                # Display results
+                table = Table(show_header=True, header_style="bold magenta")
+                table.add_column("ID", style="cyan")
+                table.add_column("Name", style="green")
+                table.add_column("Category", width=25)
+                table.add_column("Description")
 
-            console.print(table)
-            console.print(f"\n[dim]Found {len(skills_list)} skills (showing first 10)[/dim]")
+                for skill in skills_list[:10]:  # Limit to 10 results
+                    table.add_row(skill.id, skill.name, skill.category.value, skill.description)
+
+                console.print(table)
+                console.print(f"\n[dim]Found {len(skills_list)} skills (showing first 10)[/dim]")
 
         elif action == "show":
             if not skill_id:
