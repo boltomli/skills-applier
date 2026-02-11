@@ -81,11 +81,37 @@ class DependencyGenerator:
         """Generate a single import statement.
 
         Args:
-            dependency: Dependency name
+            dependency: Dependency name or import statement
 
         Returns:
             Import statement or None if standard library
         """
+        dependency = dependency.strip()
+
+        # Check if it's already a valid import statement
+        if dependency.startswith("import ") or dependency.startswith("from "):
+            # Validate it's not standard library
+            module_name = (
+                dependency.replace("import ", "")
+                .replace("from ", "")
+                .split(" as ")[0]
+                .split()[0]
+                .split(".")[0]
+                .strip()
+            )
+            if module_name.lower() in self.STANDARD_LIBRARY:
+                return None
+            return dependency
+
+        # Check if it's in format "package as alias"
+        if " as " in dependency and not dependency.startswith("import "):
+            parts = dependency.split(" as ")
+            module_name = parts[0].strip()
+            alias = parts[1].strip()
+            if module_name.lower() in self.STANDARD_LIBRARY:
+                return None
+            return f"import {module_name} as {alias}"
+
         # Check if it's a standard library
         if dependency.lower() in self.STANDARD_LIBRARY:
             return None

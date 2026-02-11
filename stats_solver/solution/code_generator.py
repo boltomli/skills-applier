@@ -32,6 +32,7 @@ class GenerationContext:
     data_description: str | None = None
     output_requirements: str | None = None
     additional_context: dict[str, Any] = None
+    related_skills: list[SkillMetadata] | None = None
 
 
 class CodeGenerator:
@@ -107,6 +108,9 @@ class CodeGenerator:
             metadata={
                 "method": "template",
                 "skill_id": context.skill.id,
+                "skill_name": context.skill.name,
+                "skill_description": context.skill.description,
+                "skill_category": context.skill.category.value,
             },
         )
 
@@ -141,6 +145,9 @@ class CodeGenerator:
                 metadata={
                     "method": "llm",
                     "skill_id": context.skill.id,
+                    "skill_name": context.skill.name,
+                    "skill_description": context.skill.description,
+                    "skill_category": context.skill.category.value,
                     "confidence": result.get("confidence", 0.8),
                 },
             )
@@ -158,9 +165,22 @@ class CodeGenerator:
         Returns:
             Prompt string
         """
+        # Build related skills section
+        related_skills_section = ""
+        if context.related_skills and len(context.related_skills) > 0:
+            related_skills_section = "\n**Related Skills for Reference**:\n"
+            for i, related_skill in enumerate(context.related_skills[:5], 1):  # Limit to 5
+                related_skills_section += f"- Skill {i}: {related_skill.name}\n"
+                related_skills_section += f"  Description: {related_skill.description}\n"
+                related_skills_section += f"  Dependencies: {', '.join(related_skill.dependencies) if related_skill.dependencies else 'None'}\n"
+                if related_skill.statistical_concept:
+                    related_skills_section += f"  Concept: {related_skill.statistical_concept}\n"
+                related_skills_section += "\n"
+            related_skills_section += "You may reference these related skills for implementation patterns and best practices.\n"
+
         return f"""Generate Python code for the following statistical/mathematical skill:
 
-**Skill**: {context.skill.name}
+**Target Skill**: {context.skill.name}
 **Description**: {context.skill.description}
 **Category**: {context.skill.category.value}
 
@@ -175,7 +195,7 @@ class CodeGenerator:
 **Additional Context**:
 - Statistical Concept: {context.skill.statistical_concept or 'None'}
 - Assumptions: {', '.join(context.skill.assumptions) if context.skill.assumptions else 'None'}
-
+{related_skills_section}
 Return a JSON object with:
 - code: Complete Python code (including imports, function definition, and example usage)
 - imports: List of import statements
@@ -188,7 +208,8 @@ Requirements:
 3. Add error handling where appropriate
 4. Include example usage in a if __name__ == "__main__" block
 5. Use the specified dependencies
-6. Return the result in the specified format"""
+6. Return the result in the specified format
+7. If related skills are provided, consider their implementation patterns for best practices"""
 
     def format_code(self, generated: GeneratedCode) -> str:
         """Format generated code into a complete file.
@@ -201,10 +222,34 @@ Requirements:
         """
         lines = []
 
+        # Add skill information header
+        skill_name = generated.metadata.get("skill_name", "")
+        skill_description = generated.metadata.get("skill_description", "")
+        skill_id = generated.metadata.get("skill_id", "")
+
+        if skill_name:
+            lines.append(f"# Skill: {skill_name}")
+            if skill_description:
+                lines.append(f"# {skill_description}")
+            if skill_id:
+                lines.append(f"# Skill ID: {skill_id}")
+            lines.append("")
+
         # Add imports
         if generated.imports:
             lines.append("# Imports")
-            lines.extend(generated.imports)
+            for imp in generated.imports:
+                # Ensure import statement is properly formatted
+                imp = imp.strip()
+                if imp and not imp.startswith("#"):
+                    # Fix malformed imports like "numpy as np" -> "import numpy as np"
+                    if not imp.startswith("import ") and not imp.startswith("from "):
+                        if " as " in imp:
+                            lines.append(f"import {imp}")
+                        else:
+                            lines.append(f"import {imp}")
+                    else:
+                        lines.append(imp)
             lines.append("")
 
         # Add main function with docstring

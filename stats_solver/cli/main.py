@@ -151,8 +151,22 @@ def solve(
             console.print("[yellow]Solution generation cancelled.[/yellow]")
             return
 
-        # Step 7: Generate code
-        console.print("\n[cyan]Step 6: Generating code...[/cyan]")
+        # Step 7: Get related programming skills for reference
+        from ..skills.metadata_schema import SkillTypeGroup
+
+        related_programming_skills = [
+            skill
+            for skill in skills
+            if skill.type_group == SkillTypeGroup.PROGRAMMING and skill.id != top_rec.skill.id
+        ]
+
+        # Show number of related skills
+        console.print(
+            f"[dim]Using {len(related_programming_skills)} related programming skills for reference[/dim]"
+        )
+
+        # Step 8: Generate code
+        console.print("\n[cyan]Step 7: Generating code...[/cyan]")
 
         code_generator = CodeGenerator(llm_provider=llm_manager.provider if llm_manager else None)
 
@@ -161,6 +175,7 @@ def solve(
             problem_description=problem,
             data_description="Your data",
             output_requirements="Result",
+            related_skills=related_programming_skills[:5],  # Limit to 5 for reference
         )
 
         try:
