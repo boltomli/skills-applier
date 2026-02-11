@@ -2,7 +2,7 @@
 
 import logging
 
-from .metadata_schema import SkillMetadata, SkillCategory, DataType
+from .metadata_schema import SkillMetadata, SkillCategory, SkillTypeGroup, DataType
 from ..llm.base import LLMProvider
 
 logger = logging.getLogger(__name__)
@@ -220,6 +220,9 @@ class SkillClassifier:
             # Use existing category as default
             pass
 
+        # Set type_group based on category
+        skill.type_group = skill.category.type_group
+
         # Extract data types
         data_types = self._extract_data_types(text_to_analyze)
         if not skill.input_data_types:
@@ -254,6 +257,15 @@ class SkillClassifier:
                     skill.category = SkillCategory(result["category"])
                 except ValueError:
                     logger.warning(f"Invalid category from LLM: {result['category']}")
+
+            if "type_group" in result:
+                try:
+                    skill.type_group = SkillTypeGroup(result["type_group"])
+                except ValueError:
+                    logger.warning(f"Invalid type_group from LLM: {result['type_group']}")
+            else:
+                # Fallback to category's type_group
+                skill.type_group = skill.category.type_group
 
             if "data_types" in result:
                 skill.input_data_types = []
@@ -297,6 +309,9 @@ Dependencies: {", ".join(skill.dependencies)}
 
 Return a JSON object with:
 - category: One of "statistical_method", "mathematical_implementation", "data_analysis", "visualization", or "algorithm"
+- type_group: Either "problem_solving" (解决问题的方法) or "programming" (编程用)
+  * problem_solving: statistical_method, data_analysis, visualization
+  * programming: mathematical_implementation, algorithm
 - data_types: Array of applicable data types (numerical, categorical, time_series, text, boolean, mixed)
 - tags: Array of relevant descriptive tags (3-5 tags)
 - statistical_concept: The main statistical concept if applicable (e.g., "hypothesis_testing", "regression"), or null
@@ -341,4 +356,34 @@ Return a JSON object with:
             classified.append(classified_skill)
 
         logger.info(f"Classified {len(classified)} skills")
+        return classified
+
+    async def batch_classify_with_progress(
+        self, skills: list[SkillMetadata], batch_size: int = 50, progress_callback=None
+    ) -> list[SkillMetadata]:
+        """Classify multiple skills in batches with progress callback.
+
+        Args:
+            skills: List of skills to classify
+            batch_size: Number of skills to classify before saving progress (for future use)
+            progress_callback: Optional callback function(current, total)
+
+        Returns:
+            List of classified skills
+        """
+        classified = []
+        total = len(skills)
+
+        for i, skill in enumerate(skills):
+            classified_skill = await self.classify(skill)
+            classified.append(classified_skill)
+
+            if progress_callback:
+                progress_callback(i + 1, total)
+
+            # Optional: log progress periodically
+            if (i + 1) % batch_size == 0 or i + 1 == total:
+                logger.info(f"Classified {i + 1}/{total} skills")
+
+        logger.info(f"Classified {len(classified)} skills total")
         return classified

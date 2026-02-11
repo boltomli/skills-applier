@@ -5,6 +5,13 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 
+class SkillTypeGroup(str, Enum):
+    """技能类型分组：解决问题方法 vs 编程用."""
+
+    PROBLEM_SOLVING = "problem_solving"  # 解决问题的方法
+    PROGRAMMING = "programming"  # 编程用
+
+
 class SkillCategory(str, Enum):
     """Skill category classification."""
 
@@ -13,6 +20,20 @@ class SkillCategory(str, Enum):
     DATA_ANALYSIS = "data_analysis"
     VISUALIZATION = "visualization"
     ALGORITHM = "algorithm"
+
+    @property
+    def type_group(self) -> SkillTypeGroup:
+        """获取技能类型分组."""
+        # 统计方法、数据分析、可视化属于解决问题的方法
+        if self in {
+            SkillCategory.STATISTICAL_METHOD,
+            SkillCategory.DATA_ANALYSIS,
+            SkillCategory.VISUALIZATION,
+        }:
+            return SkillTypeGroup.PROBLEM_SOLVING
+        # 数学实现、算法属于编程用
+        else:
+            return SkillTypeGroup.PROGRAMMING
 
 
 class DataType(str, Enum):
@@ -36,6 +57,10 @@ class SkillMetadata(BaseModel):
 
     # Classification
     category: SkillCategory = Field(..., description="Primary skill category")
+    type_group: SkillTypeGroup = Field(
+        default=SkillTypeGroup.PROBLEM_SOLVING,
+        description="Type group: problem_solving (解决问题的方法) or programming (编程用)",
+    )
     tags: list[str] = Field(default_factory=list, description="Descriptive tags")
 
     # Data capabilities

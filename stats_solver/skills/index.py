@@ -6,7 +6,13 @@ from pathlib import Path
 from typing import Any
 from datetime import datetime
 
-from .metadata_schema import SkillMetadata, SkillCategory, SkillIndexMetadata, DataType
+from .metadata_schema import (
+    SkillMetadata,
+    SkillCategory,
+    SkillTypeGroup,
+    SkillIndexMetadata,
+    DataType,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -81,11 +87,12 @@ class SkillIndex:
             logger.error(f"Failed to save index: {e}")
             raise
 
-    def add_skill(self, skill: SkillMetadata) -> None:
+    def add_skill(self, skill: SkillMetadata, mode: str = "merge") -> None:
         """Add a skill to the index.
 
         Args:
             skill: Skill metadata to add
+            mode: Update mode - 'merge' (update if exists), 'overwrite' (always add new), 'skip' (skip if exists)
         """
         if not self._metadata:
             self._metadata = SkillIndexMetadata(
@@ -100,6 +107,10 @@ class SkillIndex:
             (i for i, s in enumerate(self._metadata.skills) if s.id == skill.id), None
         )
 
+        if mode == "skip" and existing_idx is not None:
+            logger.info(f"Skipped existing skill: {skill.id}")
+            return
+
         if existing_idx is not None:
             # Update existing skill
             self._metadata.skills[existing_idx] = skill
@@ -108,6 +119,75 @@ class SkillIndex:
             # Add new skill
             self._metadata.add_skill(skill)
             logger.info(f"Added skill: {skill.id}")
+
+    async def batch_add_skills(
+        self,
+        skills: list[SkillMetadata],
+        mode: str = "merge",
+        batch_size: int = 50,
+        progress_callback=None,
+    ) -> dict[str, int]:
+        """Add multiple skills in batches, saving progress after each batch.
+
+        Args:
+            skills: List of skills to add
+            mode: Update mode - 'merge' (update existing, add new), 'overwrite' (replace all), 'skip' (skip existing)
+            batch_size: Number of skills to process before saving
+            progress_callback: Optional callback function(current, total)
+
+        Returns:
+            Dictionary with counts: added, updated, skipped, total
+        """
+        if not self._metadata:
+            self._metadata = SkillIndexMetadata(
+                skills=[],
+                categories={},
+                last_updated=datetime.utcnow().isoformat(),
+                total_skills=0,
+            )
+
+        stats = {"added": 0, "updated": 0, "skipped": 0, "total": 0}
+
+        # Process in batches
+        for i in range(0, len(skills), batch_size):
+            batch = skills[i : i + batch_size]
+            batch_num = i // batch_size + 1
+            total_batches = (len(skills) + batch_size - 1) // batch_size
+
+            logger.info(f"Processing batch {batch_num}/{total_batches} ({len(batch)} skills)")
+
+            for j, skill in enumerate(batch):
+                global_index = i + j + 1
+                if progress_callback:
+                    progress_callback(global_index, len(skills))
+
+                # Find existing skill
+                existing_idx = next(
+                    (k for k, s in enumerate(self._metadata.skills) if s.id == skill.id), None
+                )
+
+                # Apply mode logic
+                if mode == "skip" and existing_idx is not None:
+                    stats["skipped"] += 1
+                    logger.debug(f"Skipped existing skill: {skill.id}")
+                elif existing_idx is not None:
+                    # Update existing skill (merge or overwrite mode)
+                    self._metadata.skills[existing_idx] = skill
+                    stats["updated"] += 1
+                    logger.debug(f"Updated skill: {skill.id}")
+                else:
+                    # Add new skill
+                    self._metadata.add_skill(skill)
+                    stats["added"] += 1
+                    logger.debug(f"Added skill: {skill.id}")
+
+                stats["total"] += 1
+
+            # Save progress after each batch
+            await self.save()
+            logger.info(f"Batch {batch_num}/{total_batches} saved")
+
+        return stats
 
     def get_skill(self, skill_id: str) -> SkillMetadata | None:
         """Get a skill by ID.
@@ -148,6 +228,19 @@ class SkillIndex:
         if not self._metadata:
             return []
         return self._metadata.get_by_category(category)
+
+    def get_by_type_group(self, type_group: SkillTypeGroup) -> list[SkillMetadata]:
+        """Get all skills in a type group.
+
+        Args:
+            type_group: Type group (problem_solving or programming)
+
+        Returns:
+            List of skills in the type group
+        """
+        if not self._metadata:
+            return []
+        return [s for s in self._metadata.skills if s.type_group == type_group]
 
     def get_by_tag(self, tag: str) -> list[SkillMetadata]:
         """Get all skills with a specific tag.
@@ -203,12 +296,20 @@ class SkillIndex:
             return {
                 "total_skills": 0,
                 "categories": {},
+                "type_groups": {},
                 "last_updated": None,
             }
+
+        # Count type groups
+        type_groups = {}
+        for skill in self._metadata.skills:
+            group = skill.type_group.value
+            type_groups[group] = type_groups.get(group, 0) + 1
 
         return {
             "total_skills": self._metadata.total_skills,
             "categories": self._metadata.categories,
+            "type_groups": type_groups,
             "last_updated": self._metadata.last_updated,
         }
 

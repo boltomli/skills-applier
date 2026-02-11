@@ -193,12 +193,18 @@ class SkillMatcher:
         expected_category = category_map.get(problem_features.problem_type)
 
         if expected_category and skill.category == expected_category:
-            return 1.0, f"Category matches: {skill.category.value}"
+            return 1.0, f"Category matches: {skill.category.value} ({skill.type_group.value})"
         elif skill.category == SkillCategory.STATISTICAL_METHOD:
             # Statistical methods are often flexible
-            return 0.7, f"Statistical method applicable to {problem_features.problem_type}"
+            return (
+                0.7,
+                f"Statistical method applicable to {problem_features.problem_type} ({skill.type_group.value})",
+            )
         else:
-            return 0.3, "Category may not be optimal for this problem type"
+            return (
+                0.3,
+                f"Category may not be optimal for this problem type ({skill.type_group.value})",
+            )
 
     def _match_data_types(
         self,

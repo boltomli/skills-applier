@@ -515,11 +515,34 @@ def check():
 
 
 @app.command()
-def init():
+def init(
+    mode: str = typer.Option(
+        "merge",
+        "--mode",
+        "-m",
+        help="Init mode: merge (merge new skills), overwrite (replace all), skip (skip existing)",
+    ),
+    batch_size: int = typer.Option(
+        50,
+        "--batch-size",
+        "-b",
+        help="Batch size for processing skills (saves progress after each batch)",
+    ),
+):
     """Initialize the system (scan skills, connect to LLM)."""
     import asyncio
+    from rich.progress import (
+        Progress,
+        SpinnerColumn,
+        TextColumn,
+        BarColumn,
+        TaskProgressColumn,
+        TimeRemainingColumn,
+    )
 
     console.print("[bold cyan]Initializing Skills Applier...[/bold cyan]\n")
+    console.print(f"[dim]Mode: {mode}[/dim]")
+    console.print(f"[dim]Batch size: {batch_size}[/dim]")
 
     async def _init():
         # Initialize LLM manager
@@ -608,26 +631,106 @@ def init():
         index = SkillIndex()
         await index.load()
 
-        # Classify skills
+        # Handle overwrite mode
+        if mode == "overwrite":
+            console.print("[yellow]![/yellow] Overwrite mode: clearing existing index...")
+            index.clear()
+
+        # Get existing skill IDs for skip mode (and merge mode optimization)
+        existing_skill_ids = set()
+        if mode == "skip" or mode == "merge":
+            existing_skill_ids = {s.id for s in index.get_all_skills()}
+            console.print(f"[dim]Found {len(existing_skill_ids)} existing skills[/dim]")
+
+        # Filter out existing skills to avoid re-classification
+        skills_to_classify = scanned_skills
+        if mode == "skip":
+            skills_to_classify = [s for s in scanned_skills if s.id not in existing_skill_ids]
+            skipped_count = len(scanned_skills) - len(skills_to_classify)
+            if skipped_count > 0:
+                console.print(
+                    f"[dim]Skipping {skipped_count} existing skills (no need to re-classify)[/dim]"
+                )
+
+        # Classify skills with progress bar
         use_llm_classification = config_manager.config.enable_llm_classification
         classifier = SkillClassifier(
             use_llm=use_llm_classification and llm_manager is not None,
             llm_provider=llm_manager.provider if llm_manager else None,
         )
 
-        if use_llm_classification and llm_manager:
-            console.print("[cyan]Classifying skills with LLM...[/cyan]")
+        # Classify with progress tracking (only for skills that need classification)
+        classified_skills = []
+        if skills_to_classify:
+            if use_llm_classification and llm_manager:
+                console.print(
+                    f"[cyan]Classifying {len(skills_to_classify)} new skills with LLM...[/cyan]"
+                )
+            else:
+                console.print(
+                    f"[cyan]Classifying {len(skills_to_classify)} new skills with rules...[/cyan]"
+                )
+
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TaskProgressColumn(),
+                TimeRemainingColumn(),
+                console=console,
+            ) as progress:
+                classify_task = progress.add_task(
+                    "[cyan]Classifying skills...", total=len(skills_to_classify)
+                )
+
+                classified_skills = await classifier.batch_classify_with_progress(
+                    skills_to_classify,
+                    batch_size=batch_size,
+                    progress_callback=lambda current, total: progress.update(
+                        classify_task, completed=current
+                    ),
+                )
+
+            # For skip mode, append existing skills to classified list
+            if mode == "skip":
+                existing_skills = [s for s in scanned_skills if s.id in existing_skill_ids]
+                classified_skills.extend(existing_skills)
         else:
-            console.print("[cyan]Classifying skills with rules...[/cyan]")
+            # No new skills to classify
+            console.print("[green]✓[/green] No new skills to classify")
+            classified_skills = scanned_skills
 
-        classified_skills = await classifier.batch_classify(scanned_skills)
+        # Add to index with mode logic and progress tracking
+        console.print("\n[cyan]Adding skills to index...[/cyan]")
 
-        # Add to index
-        for skill in classified_skills:
-            index.add_skill(skill)
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TaskProgressColumn(),
+            TimeRemainingColumn(),
+            console=console,
+        ) as progress:
+            index_task = progress.add_task("[cyan]Indexing skills...", total=len(classified_skills))
 
-        # Save index
-        await index.save()
+            stats = await index.batch_add_skills(
+                classified_skills,
+                mode=mode,
+                batch_size=batch_size,
+                progress_callback=lambda current, total: progress.update(
+                    index_task, completed=current
+                ),
+            )
+
+        # Display statistics
+        final_stats = index.get_statistics()
+        console.print(f"\n[green]✓[/green] Indexed {final_stats['total_skills']} skills")
+        if stats.get("added", 0) > 0:
+            console.print(f"[green]Added: {stats['added']}[/green]")
+        if stats.get("updated", 0) > 0:
+            console.print(f"[yellow]Updated: {stats['updated']}[/yellow]")
+        if stats.get("skipped", 0) > 0:
+            console.print(f"[dim]Skipped: {stats['skipped']}[/dim]")
 
         # Display statistics
         stats = index.get_statistics()
@@ -646,7 +749,7 @@ def init():
 
 @app.command()
 def skills(
-    action: str = typer.Argument("list", help="Action: list, search, show"),
+    action: str = typer.Argument("list", help="Action: list, search, show, check"),
     category: str | None = typer.Option(None, "--category", "-c", help="Filter by category"),
     tag: str | None = typer.Option(None, "--tag", "-t", help="Filter by tag"),
     data_type: str | None = typer.Option(None, "--data-type", "-d", help="Filter by data type"),
@@ -848,9 +951,71 @@ def skills(
 
             console.print(table)
 
+        elif action == "check":
+            """Check skills for issues and optionally fix them."""
+            console.print("[bold cyan]Checking skills for issues...[/bold cyan]\n")
+
+            all_skills = index.get_all_skills()
+            issues_found = []
+
+            for skill in all_skills:
+                skill_issues = []
+
+                # Check 1: Missing or empty description
+                if not skill.description or skill.description.strip() == "":
+                    skill_issues.append("Missing description")
+
+                # Check 2: Missing tags
+                if not skill.tags:
+                    skill_issues.append("Missing tags")
+
+                # Check 3: Missing data types
+                if not skill.input_data_types:
+                    skill_issues.append("Missing input data types")
+
+                # Check 4: Invalid path
+                from pathlib import Path
+
+                if not Path(skill.path).exists():
+                    skill_issues.append("Path does not exist")
+
+                # Check 5: Low confidence score
+                if skill.confidence < 0.5:
+                    skill_issues.append(f"Low confidence ({skill.confidence:.2f})")
+
+                # Check 6: Missing type_group
+                if not skill.type_group:
+                    skill_issues.append("Missing type_group")
+
+                if skill_issues:
+                    issues_found.append({"skill": skill, "issues": skill_issues})
+
+            # Display results
+            if not issues_found:
+                console.print(
+                    f"[green]✓[/green] No issues found in [green]{len(all_skills)}[/green] skills"
+                )
+            else:
+                console.print(
+                    f"[yellow]![/yellow] Found issues in [yellow]{len(issues_found)}[/yellow] skills:\n"
+                )
+
+                # Display issues in a table
+                table = Table(show_header=True, header_style="bold magenta")
+                table.add_column("ID", style="cyan", width=30)
+                table.add_column("Name", style="green", width=30)
+                table.add_column("Issues", style="yellow")
+
+                for item in issues_found:
+                    issues_str = ", ".join(item["issues"])
+                    table.add_row(item["skill"].id, item["skill"].name, issues_str)
+
+                console.print(table)
+                console.print(f"\n[dim]Checked {len(all_skills)} skills total[/dim]")
+
         else:
             console.print(f"[red]Unknown action: {action}[/red]")
-            console.print("Use: skills-applier skills [list|search|show] [options]")
+            console.print("Use: skills-applier skills [list|search|show|check] [options]")
 
     asyncio.run(_run_skills())
 
