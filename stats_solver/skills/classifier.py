@@ -231,6 +231,77 @@ class SkillClassifier:
         skill.source = "rules"
         return skill
 
+    # Normalization mappings for common invalid LLM responses
+    CATEGORY_NORMALIZATION = {
+        "programming": SkillCategory.ALGORITHM,
+        "code": SkillCategory.ALGORITHM,
+        "implementation": SkillCategory.MATHEMATICAL_IMPLEMENTATION,
+        "math": SkillCategory.MATHEMATICAL_IMPLEMENTATION,
+        "stats": SkillCategory.STATISTICAL_METHOD,
+        "statistical": SkillCategory.STATISTICAL_METHOD,
+        "visual": SkillCategory.VISUALIZATION,
+        "chart": SkillCategory.VISUALIZATION,
+    }
+
+    DATA_TYPE_NORMALIZATION = {
+        "nominal": DataType.CATEGORICAL,
+        "list": DataType.ARRAY,
+        "vector": DataType.ARRAY,
+        "matrix": DataType.ARRAY,
+        "sequence": DataType.TIME_SERIES,
+        "string": DataType.TEXT,
+        "str": DataType.TEXT,
+        "bool": DataType.BOOLEAN,
+    }
+
+    def _normalize_category(self, category_value: str) -> SkillCategory | None:
+        """Normalize category value to valid enum.
+
+        Args:
+            category_value: Raw category value from LLM
+
+        Returns:
+            Normalized SkillCategory or None if unresolvable
+        """
+        category_value = category_value.lower().strip()
+
+        # Direct enum match
+        for category in SkillCategory:
+            if category.value == category_value:
+                return category
+
+        # Normalization mapping
+        if category_value in self.CATEGORY_NORMALIZATION:
+            normalized = self.CATEGORY_NORMALIZATION[category_value]
+            logger.info(f"Normalized category '{category_value}' -> '{normalized.value}'")
+            return normalized
+
+        return None
+
+    def _normalize_data_type(self, data_type_value: str) -> DataType | None:
+        """Normalize data type value to valid enum.
+
+        Args:
+            data_type_value: Raw data type value from LLM
+
+        Returns:
+            Normalized DataType or None if unresolvable
+        """
+        data_type_value = data_type_value.lower().strip()
+
+        # Direct enum match
+        for data_type in DataType:
+            if data_type.value == data_type_value:
+                return data_type
+
+        # Normalization mapping
+        if data_type_value in self.DATA_TYPE_NORMALIZATION:
+            normalized = self.DATA_TYPE_NORMALIZATION[data_type_value]
+            logger.info(f"Normalized data type '{data_type_value}' -> '{normalized.value}'")
+            return normalized
+
+        return None
+
     async def _classify_with_llm(self, skill: SkillMetadata) -> SkillMetadata:
         """Classify skill using LLM.
 
@@ -253,27 +324,36 @@ class SkillClassifier:
 
             # Update skill with LLM results
             if "category" in result:
-                try:
-                    skill.category = SkillCategory(result["category"])
-                except ValueError:
-                    logger.warning(f"Invalid category from LLM: {result['category']}")
+                normalized_category = self._normalize_category(result["category"])
+                if normalized_category:
+                    skill.category = normalized_category
+                else:
+                    logger.warning(
+                        f"Invalid category from LLM: {result['category']}, using existing value"
+                    )
 
             if "type_group" in result:
                 try:
                     skill.type_group = SkillTypeGroup(result["type_group"])
                 except ValueError:
-                    logger.warning(f"Invalid type_group from LLM: {result['type_group']}")
+                    logger.warning(
+                        f"Invalid type_group from LLM: {result['type_group']}, using category's type_group"
+                    )
+                    skill.type_group = skill.category.type_group
             else:
                 # Fallback to category's type_group
                 skill.type_group = skill.category.type_group
 
             if "data_types" in result:
                 skill.input_data_types = []
+                valid_types = []
                 for dt in result["data_types"]:
-                    try:
-                        skill.input_data_types.append(DataType(dt))
-                    except ValueError:
+                    normalized_type = self._normalize_data_type(dt)
+                    if normalized_type:
+                        valid_types.append(normalized_type)
+                    else:
                         logger.warning(f"Invalid data type from LLM: {dt}")
+                skill.input_data_types = valid_types if valid_types else [DataType.NUMERICAL]
 
             if "tags" in result:
                 skill.tags.extend(result["tags"])
@@ -307,15 +387,38 @@ Description: {skill.description}
 Current Tags: {", ".join(skill.tags)}
 Dependencies: {", ".join(skill.dependencies)}
 
-Return a JSON object with:
-- category: One of "statistical_method", "mathematical_implementation", "data_analysis", "visualization", or "algorithm"
-- type_group: Either "problem_solving" (解决问题的方法) or "programming" (编程用)
-  * problem_solving: statistical_method, data_analysis, visualization
-  * programming: mathematical_implementation, algorithm
-- data_types: Array of applicable data types (numerical, categorical, time_series, text, boolean, mixed)
+Return a JSON object with EXACT values from the following lists:
+
+- category: MUST be one of these EXACT values:
+  * "statistical_method" - Statistical tests and analysis methods
+  * "mathematical_implementation" - Pure math algorithms and computations
+  * "data_analysis" - Data processing and manipulation
+  * "visualization" - Charts, plots, and visual representations
+  * "algorithm" - General algorithms and programming utilities
+  DO NOT use "programming" - that is a type_group, not a category
+
+- type_group: MUST be either:
+  * "problem_solving" (解决问题的方法) - for: statistical_method, data_analysis, visualization
+  * "programming" (编程用) - for: mathematical_implementation, algorithm
+
+- data_types: Array of applicable data types, MUST use ONLY these EXACT values:
+  * "numerical" - Numbers, measurements, counts
+  * "categorical" - Labels, groups, classes (nominal data without order)
+  * "ordinal" - Ordered categories (e.g., low/medium/high, 1-5 ratings)
+  * "time_series" - Temporal data, sequences, timestamps
+  * "text" - Strings, natural language
+  * "boolean" - True/false, yes/no
+  * "array" - Multi-dimensional arrays, lists, vectors, matrices
+  * "mixed" - Multiple data types combined
+  DO NOT use "nominal", "list", "vector", "matrix", etc.
+
 - tags: Array of relevant descriptive tags (3-5 tags)
+
 - statistical_concept: The main statistical concept if applicable (e.g., "hypothesis_testing", "regression"), or null
-- confidence: Your confidence in this classification (0.0 to 1.0)"""
+
+- confidence: Your confidence in this classification (0.0 to 1.0)
+
+CRITICAL: Use ONLY the exact values listed above. Do not invent or abbreviate any values."""
 
     def _extract_data_types(self, text: str) -> list[DataType]:
         """Extract data types from text.

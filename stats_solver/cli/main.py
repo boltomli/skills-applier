@@ -659,16 +659,17 @@ def init(
             llm_provider=llm_manager.provider if llm_manager else None,
         )
 
-        # Classify with progress tracking (only for skills that need classification)
+        # Classify and add to index with progress tracking (merged batch processing)
+        # This ensures each batch is saved to index as soon as it's classified
         classified_skills = []
         if skills_to_classify:
             if use_llm_classification and llm_manager:
                 console.print(
-                    f"[cyan]Classifying {len(skills_to_classify)} new skills with LLM...[/cyan]"
+                    f"[cyan]Classifying and indexing {len(skills_to_classify)} new skills with LLM...[/cyan]"
                 )
             else:
                 console.print(
-                    f"[cyan]Classifying {len(skills_to_classify)} new skills with rules...[/cyan]"
+                    f"[cyan]Classifying and indexing {len(skills_to_classify)} new skills with rules...[/cyan]"
                 )
 
             with Progress(
@@ -679,17 +680,50 @@ def init(
                 TimeRemainingColumn(),
                 console=console,
             ) as progress:
-                classify_task = progress.add_task(
-                    "[cyan]Classifying skills...", total=len(skills_to_classify)
+                task = progress.add_task(
+                    "[cyan]Classifying and indexing skills...", total=len(skills_to_classify)
                 )
 
-                classified_skills = await classifier.batch_classify_with_progress(
-                    skills_to_classify,
-                    batch_size=batch_size,
-                    progress_callback=lambda current, total: progress.update(
-                        classify_task, completed=current
-                    ),
-                )
+                # Process skills in batches: classify -> save to index
+                stats = {"added": 0, "updated": 0, "skipped": 0, "total": 0}
+                for i in range(0, len(skills_to_classify), batch_size):
+                    batch = skills_to_classify[i : i + batch_size]
+                    batch_num = i // batch_size + 1
+                    total_batches = (len(skills_to_classify) + batch_size - 1) // batch_size
+
+                    # Classify the current batch
+                    classified_batch = await classifier.batch_classify(batch)
+                    classified_skills.extend(classified_batch)
+
+                    # Add classified batch to index immediately
+                    for j, skill in enumerate(classified_batch):
+                        # Find existing skill
+                        existing_idx = next(
+                            (k for k, s in enumerate(index._metadata.skills) if s.id == skill.id),
+                            None,
+                        )
+
+                        # Apply mode logic
+                        if mode == "skip" and existing_idx is not None:
+                            stats["skipped"] += 1
+                        elif existing_idx is not None:
+                            index._metadata.skills[existing_idx] = skill
+                            stats["updated"] += 1
+                        else:
+                            index.add_skill(skill)
+                            stats["added"] += 1
+
+                        stats["total"] += 1
+
+                        # Update progress
+                        global_index = i + j + 1
+                        progress.update(task, completed=global_index)
+
+                    # Save progress after each batch
+                    await index.save()
+                    console.print(
+                        f"[dim]Batch {batch_num}/{total_batches} saved ({len(batch)} skills)[/dim]"
+                    )
 
             # For skip mode, append existing skills to classified list
             if mode == "skip":
@@ -699,28 +733,7 @@ def init(
             # No new skills to classify
             console.print("[green]✓[/green] No new skills to classify")
             classified_skills = scanned_skills
-
-        # Add to index with mode logic and progress tracking
-        console.print("\n[cyan]Adding skills to index...[/cyan]")
-
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            TaskProgressColumn(),
-            TimeRemainingColumn(),
-            console=console,
-        ) as progress:
-            index_task = progress.add_task("[cyan]Indexing skills...", total=len(classified_skills))
-
-            stats = await index.batch_add_skills(
-                classified_skills,
-                mode=mode,
-                batch_size=batch_size,
-                progress_callback=lambda current, total: progress.update(
-                    index_task, completed=current
-                ),
-            )
+            stats = {"added": 0, "updated": 0, "skipped": 0, "total": len(scanned_skills)}
 
         # Display statistics
         final_stats = index.get_statistics()

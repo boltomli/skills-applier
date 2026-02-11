@@ -41,9 +41,11 @@ class DataType(str, Enum):
 
     NUMERICAL = "numerical"
     CATEGORICAL = "categorical"
+    ORDINAL = "ordinal"
     TIME_SERIES = "time_series"
     TEXT = "text"
     BOOLEAN = "boolean"
+    ARRAY = "array"
     MIXED = "mixed"
 
 
