@@ -1,4 +1,4 @@
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import type { LLMConfig } from '@/types/skill';
 
 const STORAGE_KEY = 'llm-config';
@@ -8,35 +8,40 @@ const PROVIDER_MODELS: Record<string, string[]> = {
   'anthropic': ['claude-3-5-sonnet-20241022', 'claude-3-haiku-20240307']
 };
 
-export function useLLMConfig() {
-  const config = ref<LLMConfig>({
-    provider: 'openai',
-    apiKey: '',
-    model: 'gpt-4o-mini',
-    baseUrl: ''
-  });
+// 全局共享状态 - 直接导出 ref 供组件使用
+const config = ref<LLMConfig>({
+  provider: 'openai',
+  apiKey: '',
+  model: 'gpt-4o-mini',
+  baseUrl: ''
+});
 
-  const isConfigured = ref(false);
+const isConfigured = ref(false);
+let isInitialized = false;
 
-  // Load from localStorage on init
-  function loadConfig() {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        config.value = {
-          provider: parsed.provider || 'openai',
-          apiKey: parsed.apiKey || '',
-          model: parsed.model || 'gpt-4o-mini',
-          baseUrl: parsed.baseUrl || ''
-        };
-        isConfigured.value = !!config.value.apiKey;
-      }
-    } catch (e) {
-      console.error('Failed to load LLM config:', e);
+// Load from localStorage on init
+function loadConfig() {
+  if (isInitialized) return;
+
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      config.value = {
+        provider: parsed.provider || 'openai',
+        apiKey: parsed.apiKey || '',
+        model: parsed.model || 'gpt-4o-mini',
+        baseUrl: parsed.baseUrl || ''
+      };
+      isConfigured.value = !!config.value.apiKey;
     }
+    isInitialized = true;
+  } catch (e) {
+    console.error('Failed to load LLM config:', e);
   }
+}
 
+export function useLLMConfig() {
   // Save to localStorage (excluding API key for security)
   function saveConfig(saveKey: boolean = false) {
     try {
@@ -69,19 +74,13 @@ export function useLLMConfig() {
   }
 
   function updateProvider(provider: string) {
-    config.value.provider = provider as 'openai' | 'anthropic';
     const models = getAvailableModels(provider);
-    if (models.length > 0 && models[0]) {
-      config.value.model = models[0];
-    } else {
-      config.value.model = '';
-    }
-    // Note: We no longer clear baseUrl when switching providers
-    // This allows users to keep a custom endpoint if they want
+    config.value = {
+      ...config.value,
+      provider: provider as 'openai' | 'anthropic',
+      model: models.length > 0 && models[0] ? models[0] : ''
+    };
   }
-
-  // Load on initialization
-  loadConfig();
 
   return {
     config,
@@ -92,3 +91,6 @@ export function useLLMConfig() {
     updateProvider
   };
 }
+
+// 初始化时加载配置
+loadConfig();

@@ -77,7 +77,7 @@ const emit = defineEmits<{
   saved: [];
 }>();
 
-const { config, isConfigured, saveConfig, clearConfig, updateProvider } = useLLMConfig();
+const { config, saveConfig, clearConfig, updateProvider } = useLLMConfig();
 
 const showKey = ref(false);
 const saveSuccess = ref(false);
