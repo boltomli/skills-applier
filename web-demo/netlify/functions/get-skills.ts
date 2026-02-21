@@ -1,5 +1,5 @@
 import type { Handler } from '@netlify/functions';
-import { getDbClient } from './db';
+import { getDbClient, isDbConnected, setDbConnected } from './db';
 
 export const handler: Handler = async (event, context) => {
   // Enable CORS
@@ -24,7 +24,10 @@ export const handler: Handler = async (event, context) => {
 
   try {
     const db = getDbClient();
-    await db.connect();
+    if (!isDbConnected()) {
+      await db.connect();
+      setDbConnected(true);
+    }
 
     const result = await db.query(`
       SELECT 
@@ -35,7 +38,8 @@ export const handler: Handler = async (event, context) => {
       ORDER BY name ASC
     `);
 
-    await db.end();
+    // Don't close the connection in serverless environment
+    // Let it persist for reuse across warm invocations
 
     const skills = result.rows.map(row => ({
       ...row,

@@ -1,6 +1,7 @@
 import { Client } from 'pg';
 
 let client: Client | null = null;
+let isConnected = false;
 
 export function getDbClient(): Client {
   if (!client) {
@@ -10,13 +11,25 @@ export function getDbClient(): Client {
         rejectUnauthorized: false
       }
     });
+    isConnected = false;
   }
   return client;
 }
 
+export function isDbConnected(): boolean {
+  return isConnected;
+}
+
+export function setDbConnected(connected: boolean): void {
+  isConnected = connected;
+}
+
 export async function initDb() {
   const db = getDbClient();
-  await db.connect();
+  if (!isConnected) {
+    await db.connect();
+    isConnected = true;
+  }
 
   // Create skills table
   await db.query(`
@@ -53,5 +66,6 @@ export async function closeDb() {
   if (client) {
     await client.end();
     client = null;
+    isConnected = false;
   }
 }

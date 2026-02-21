@@ -1,5 +1,5 @@
 import type { Handler } from '@netlify/functions';
-import { getDbClient } from './db';
+import { getDbClient, isDbConnected, setDbConnected } from './db';
 
 export const handler: Handler = async (event, context) => {
   const headers = {
@@ -33,7 +33,10 @@ export const handler: Handler = async (event, context) => {
     }
 
     const db = getDbClient();
-    await db.connect();
+    if (!isDbConnected()) {
+      await db.connect();
+      setDbConnected(true);
+    }
 
     // Simple keyword matching using PostgreSQL full-text search
     // Fallback when LLM is not configured
@@ -53,7 +56,8 @@ export const handler: Handler = async (event, context) => {
       LIMIT $2
     `, [searchQuery, limit]);
 
-    await db.end();
+    // Don't close the connection in serverless environment
+    // Let it persist for reuse across warm invocations
 
     const recommendations = result.rows.map(row => ({
       skill_id: row.id,

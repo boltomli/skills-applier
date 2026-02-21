@@ -1,5 +1,5 @@
 import type { Handler } from '@netlify/functions';
-import { initDb, closeDb } from './db';
+import { initDb, closeDb, setDbConnected } from './db';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
@@ -48,6 +48,7 @@ export const handler: Handler = async (event, context) => {
 
   try {
     const db = await initDb();
+    setDbConnected(true);
     const skillsLoaded: string[] = [];
     const errors: string[] = [];
 
