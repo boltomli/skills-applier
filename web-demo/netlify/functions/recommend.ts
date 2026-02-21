@@ -43,9 +43,9 @@ export const handler: Handler = async (event, context) => {
     const searchQuery = query.toLowerCase().split(/\s+/).filter(w => w.length > 2).join(' | ');
 
     const result = await db.query(`
-      SELECT 
+      SELECT
         id, name, description, category, type_group, tags,
-        use_cases, dependencies,
+        use_cases, dependencies, source_content,
         ts_rank(
           to_tsvector('english', name || ' ' || COALESCE(description, '') || ' ' || COALESCE(array_to_string(tags, ' '), '')),
           to_tsquery('english', $1)
@@ -66,10 +66,15 @@ export const handler: Handler = async (event, context) => {
       confidence: Math.min(0.3 + (row.rank * 0.5), 0.8),
       suggestions: row.use_cases?.slice(0, 2) || ['Consider reviewing the skill documentation'],
       skill: {
-        ...row,
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        category: row.category,
+        type_group: row.type_group,
         tags: row.tags || [],
         use_cases: row.use_cases || [],
-        dependencies: row.dependencies || []
+        dependencies: row.dependencies || [],
+        source_content: row.source_content
       }
     }));
 
