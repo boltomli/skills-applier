@@ -60,38 +60,38 @@ function submit() {
 .problem-input {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.875rem;
 }
 
 .input-label {
   font-weight: 600;
   color: #374151;
-  font-size: 0.875rem;
+  font-size: 1.25rem;
 }
 
 .input-textarea {
   width: 100%;
-  padding: 0.75rem;
+  padding: 1.25rem;
   border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  line-height: 1.5;
+  border-radius: 0.75rem;
+  font-size: 1.125rem;
+  line-height: 1.7;
   resize: vertical;
-  min-height: 100px;
+  min-height: 180px;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .input-textarea:focus {
   outline: none;
   border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
 .input-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
 }
 
 .char-count {
@@ -108,11 +108,12 @@ function submit() {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
+  padding: 0.875rem 1.75rem;
   background-color: #3b82f6;
   color: white;
   border: none;
   border-radius: 0.5rem;
+  font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;

@@ -1,21 +1,28 @@
 <template>
   <div class="config-panel">
-    <h3 class="panel-title">LLM Configuration</h3>
-    <p class="panel-description">
-      Configure your own LLM provider (BYOK) or leave empty to use keyword matching.
-    </p>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="provider">Provider</label>
+        <select
+          id="provider"
+          v-model="config.provider"
+          @change="onProviderChange"
+        >
+          <option value="openai">OpenAI</option>
+          <option value="anthropic">Anthropic</option>
+          <option value="openai-compatible">OpenAI Compatible</option>
+        </select>
+      </div>
 
-    <div class="form-group">
-      <label for="provider">Provider</label>
-      <select
-        id="provider"
-        v-model="config.provider"
-        @change="onProviderChange"
-      >
-        <option value="openai">OpenAI</option>
-        <option value="anthropic">Anthropic</option>
-        <option value="openai-compatible">OpenAI Compatible (LM Studio, Ollama)</option>
-      </select>
+      <div class="form-group">
+        <label for="model">Model</label>
+        <input
+          id="model"
+          v-model="config.model"
+          type="text"
+          placeholder="e.g., gpt-4, claude-3"
+        />
+      </div>
     </div>
 
     <div v-if="config.provider === 'openai-compatible'" class="form-group">
@@ -48,49 +55,20 @@
       <small class="help-text">Your API key is stored locally and never sent to our servers.</small>
     </div>
 
-    <div class="form-group">
-      <label for="model">Model</label>
-      <select
-        v-if="availableModels.length > 1"
-        id="model"
-        v-model="config.model"
-      >
-        <option v-for="model in availableModels" :key="model" :value="model">
-          {{ model }}
-        </option>
-      </select>
-      <input
-        v-else
-        id="model"
-        v-model="config.model"
-        type="text"
-        placeholder="Enter model name"
-      />
-    </div>
-
     <div class="form-actions">
       <button class="save-btn" @click="save">Save Configuration</button>
       <button class="clear-btn" @click="clear">Clear</button>
-    </div>
-
-    <div v-if="isConfigured" class="status-badge configured">
-      ✓ LLM Configured
-    </div>
-    <div v-else class="status-badge not-configured">
-      Using keyword matching fallback
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { useLLMConfig } from '@/composables/useLLMConfig';
 
-const { config, isConfigured, saveConfig, clearConfig, getAvailableModels, updateProvider } = useLLMConfig();
+const { config, isConfigured, saveConfig, clearConfig, updateProvider } = useLLMConfig();
 
 const showKey = ref(false);
-
-const availableModels = computed(() => getAvailableModels(config.value.provider));
 
 function onProviderChange() {
   updateProvider(config.value.provider);
@@ -107,36 +85,27 @@ function clear() {
 
 <style scoped>
 .config-panel {
-  background: #f9fafb;
-  border-radius: 0.75rem;
-  padding: 1.5rem;
-  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.panel-title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 0 0 0.5rem 0;
-}
-
-.panel-description {
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin: 0 0 1.5rem 0;
-  line-height: 1.5;
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
 }
 
 .form-group label {
-  display: block;
   font-size: 0.875rem;
   font-weight: 500;
   color: #374151;
-  margin-bottom: 0.375rem;
 }
 
 .form-group input,
@@ -180,8 +149,6 @@ function clear() {
 }
 
 .help-text {
-  display: block;
-  margin-top: 0.25rem;
   font-size: 0.75rem;
   color: #6b7280;
 }
@@ -189,7 +156,7 @@ function clear() {
 .form-actions {
   display: flex;
   gap: 0.75rem;
-  margin-top: 1.5rem;
+  margin-top: 0.5rem;
 }
 
 .save-btn {
@@ -223,22 +190,9 @@ function clear() {
   background: #f3f4f6;
 }
 
-.status-badge {
-  margin-top: 1rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  text-align: center;
-}
-
-.status-badge.configured {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.status-badge.not-configured {
-  background: #fef3c7;
-  color: #92400e;
+@media (max-width: 640px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

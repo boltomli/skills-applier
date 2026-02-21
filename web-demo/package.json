@@ -37,6 +37,7 @@
     "eslint-plugin-oxlint": "~1.46.0",
     "eslint-plugin-vue": "~10.8.0",
     "jiti": "^2.6.1",
+    "netlify-cli": "^23.15.1",
     "npm-run-all2": "^8.0.4",
     "oxlint": "~1.47.0",
     "tsx": "^4.21.0",

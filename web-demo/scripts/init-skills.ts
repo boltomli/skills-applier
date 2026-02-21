@@ -82,27 +82,35 @@ async function initSkills() {
     }
 
     // Read and parse skills
-    const entries = fs.readdirSync(resolvedPath, { withFileTypes: true });
+    const categoryEntries = fs.readdirSync(resolvedPath, { withFileTypes: true });
     let loaded = 0;
     let errors = 0;
 
-    for (const entry of entries) {
-      if (entry.isDirectory()) {
-        const skillFilePath = path.join(resolvedPath, entry.name, 'SKILL.md');
+    for (const categoryEntry of categoryEntries) {
+      if (categoryEntry.isDirectory()) {
+        const category = categoryEntry.name;
+        const categoryPath = path.join(resolvedPath, category);
+        const skillEntries = fs.readdirSync(categoryPath, { withFileTypes: true });
 
-        if (fs.existsSync(skillFilePath)) {
-          try {
-            const content = fs.readFileSync(skillFilePath, 'utf-8');
-            const skill = parseSkillMarkdown(content, entry.name);
+        for (const entry of skillEntries) {
+          if (entry.isDirectory()) {
+            const skillFilePath = path.join(categoryPath, entry.name, 'SKILL.md');
 
-            if (skill) {
-              await insertOrUpdateSkill(client, skill);
-              console.log(`  ✅ ${skill.name}`);
-              loaded++;
+            if (fs.existsSync(skillFilePath)) {
+              try {
+                const content = fs.readFileSync(skillFilePath, 'utf-8');
+                const skill = parseSkillMarkdown(content, entry.name, category);
+
+                if (skill) {
+                  await insertOrUpdateSkill(client, skill);
+                  console.log(`  ✅ [${category}] ${skill.name}`);
+                  loaded++;
+                }
+              } catch (err) {
+                console.error(`  ❌ [${category}] ${entry.name}: ${err instanceof Error ? err.message : 'Unknown error'}`);
+                errors++;
+              }
             }
-          } catch (err) {
-            console.error(`  ❌ ${entry.name}: ${err instanceof Error ? err.message : 'Unknown error'}`);
-            errors++;
           }
         }
       }
@@ -118,7 +126,7 @@ async function initSkills() {
   }
 }
 
-function parseSkillMarkdown(content: string, skillId: string): any | null {
+function parseSkillMarkdown(content: string, skillId: string, category: string): any | null {
   // Extract YAML frontmatter between --- markers (support Windows \r\n and Unix \n)
   const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
 
@@ -134,7 +142,7 @@ function parseSkillMarkdown(content: string, skillId: string): any | null {
       id: skillId,
       name: metadata.name || skillId,
       description: metadata.description || '',
-      category: 'skill',
+      category: category,
       type_group: 'problem_solving',
       tags: [metadata.license || 'MIT', metadata.compatibility ? 'compatible' : ''].filter(Boolean),
       use_cases: [],
@@ -190,8 +198,12 @@ async function insertOrUpdateSkill(client: Client, skill: any) {
   ]);
 }
 
-// Run if called directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Run if called directly (support Windows and Unix)
+const isMainModule = import.meta.url === `file://${process.argv[1]}` || 
+                     import.meta.url === `file:///${process.argv[1].replace(/\\/g, '/')}` ||
+                     process.argv[1].endsWith('init-skills.ts');
+
+if (isMainModule) {
   initSkills().catch(console.error);
 }
 
