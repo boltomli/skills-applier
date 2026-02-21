@@ -10,7 +10,6 @@
         >
           <option value="openai">OpenAI</option>
           <option value="anthropic">Anthropic</option>
-          <option value="openai-compatible">OpenAI Compatible</option>
         </select>
       </div>
 
@@ -25,14 +24,18 @@
       </div>
     </div>
 
-    <div v-if="config.provider === 'openai-compatible'" class="form-group">
-      <label for="baseUrl">Base URL</label>
+    <div class="form-group">
+      <label for="baseUrl">
+        Base URL
+        <small class="optional-label">(optional)</small>
+      </label>
       <input
         id="baseUrl"
         v-model="config.baseUrl"
         type="url"
-        placeholder="http://localhost:1234/v1"
+        :placeholder="getBaseUrlPlaceholder()"
       />
+      <small class="help-text">{{ getBaseUrlHelpText() }}</small>
     </div>
 
     <div class="form-group">
@@ -59,6 +62,10 @@
       <button class="save-btn" @click="save">Save Configuration</button>
       <button class="clear-btn" @click="clear">Clear</button>
     </div>
+
+    <div v-if="saveSuccess" class="success-message">
+      ✓ Configuration saved successfully!
+    </div>
   </div>
 </template>
 
@@ -66,16 +73,48 @@
 import { ref } from 'vue';
 import { useLLMConfig } from '@/composables/useLLMConfig';
 
+const emit = defineEmits<{
+  saved: [];
+}>();
+
 const { config, isConfigured, saveConfig, clearConfig, updateProvider } = useLLMConfig();
 
 const showKey = ref(false);
+const saveSuccess = ref(false);
 
 function onProviderChange() {
   updateProvider(config.value.provider);
 }
 
+function getBaseUrlPlaceholder(): string {
+  switch (config.value.provider) {
+    case 'openai':
+      return 'https://api.openai.com/v1';
+    case 'anthropic':
+      return 'https://api.anthropic.com';
+    default:
+      return '';
+  }
+}
+
+function getBaseUrlHelpText(): string {
+  switch (config.value.provider) {
+    case 'openai':
+      return 'Leave empty to use the official OpenAI API, or enter a custom endpoint (e.g., OpenRouter, Azure).';
+    case 'anthropic':
+      return 'Leave empty to use the official Anthropic API, or enter a custom endpoint.';
+    default:
+      return '';
+  }
+}
+
 function save() {
   saveConfig(true);
+  saveSuccess.value = true;
+  setTimeout(() => {
+    saveSuccess.value = false;
+  }, 2000);
+  emit('saved');
 }
 
 function clear() {
@@ -153,6 +192,12 @@ function clear() {
   color: #6b7280;
 }
 
+.optional-label {
+  font-weight: 400;
+  color: #9ca3af;
+  margin-left: 0.25rem;
+}
+
 .form-actions {
   display: flex;
   gap: 0.75rem;
@@ -188,6 +233,28 @@ function clear() {
 
 .clear-btn:hover {
   background: #f3f4f6;
+}
+
+.success-message {
+  padding: 0.75rem 1rem;
+  background: #d1fae5;
+  color: #065f46;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: center;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (max-width: 640px) {

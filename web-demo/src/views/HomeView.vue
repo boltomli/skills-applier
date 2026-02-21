@@ -22,7 +22,7 @@
             </span>
           </button>
           <div v-show="isConfigExpanded" class="config-content">
-            <LLMConfigPanel />
+            <LLMConfigPanel @saved="isConfigExpanded = false" />
           </div>
         </section>
 

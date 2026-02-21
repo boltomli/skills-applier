@@ -2,7 +2,7 @@ import type { Handler } from '@netlify/functions';
 import axios from 'axios';
 
 interface LLMRequest {
-  provider: 'openai' | 'anthropic' | 'openai-compatible';
+  provider: 'openai' | 'anthropic';
   apiKey: string;
   baseUrl?: string;
   model: string;
@@ -51,7 +51,7 @@ export const handler: Handler = async (event, context) => {
     }
 
     // Validate provider
-    const validProviders = ['openai', 'anthropic', 'openai-compatible'];
+    const validProviders = ['openai', 'anthropic'];
     if (!validProviders.includes(provider)) {
       return {
         statusCode: 400,
@@ -66,21 +66,12 @@ export const handler: Handler = async (event, context) => {
 
     switch (provider) {
       case 'openai':
-        response = await callOpenAI(apiKey, model, messages, temperature, max_tokens);
+        response = await callOpenAI(apiKey, model, messages, temperature, max_tokens, baseUrl);
         break;
       case 'anthropic':
-        response = await callAnthropic(apiKey, model, messages, temperature, max_tokens);
+        response = await callAnthropic(apiKey, model, messages, temperature, max_tokens, baseUrl);
         break;
-      case 'openai-compatible':
-        if (!baseUrl) {
-          return {
-            statusCode: 400,
-            headers,
-            body: JSON.stringify({ error: 'baseUrl is required for openai-compatible provider' })
-          };
-        }
-        response = await callOpenAICompatible(baseUrl, apiKey, model, messages, temperature, max_tokens);
-        break;
+
     }
 
     return {
@@ -122,10 +113,13 @@ async function callOpenAI(
   model: string,
   messages: Array<{ role: string; content: string }>,
   temperature: number,
-  max_tokens: number
+  max_tokens: number,
+  baseUrl?: string
 ) {
+  const url = baseUrl ? baseUrl.replace(/\/$/, '') : 'https://api.openai.com/v1';
+
   const response = await axios.post(
-    'https://api.openai.com/v1/chat/completions',
+    `${url}/chat/completions`,
     {
       model,
       messages,
@@ -155,14 +149,17 @@ async function callAnthropic(
   model: string,
   messages: Array<{ role: string; content: string }>,
   temperature: number,
-  max_tokens: number
+  max_tokens: number,
+  baseUrl?: string
 ) {
   // Convert messages to Anthropic format
   const systemMessage = messages.find(m => m.role === 'system')?.content || '';
   const userMessages = messages.filter(m => m.role !== 'system');
 
+  const url = baseUrl ? baseUrl.replace(/\/$/, '') : 'https://api.anthropic.com';
+
   const response = await axios.post(
-    'https://api.anthropic.com/v1/messages',
+    `${url}/v1/messages`,
     {
       model,
       max_tokens,
@@ -191,37 +188,4 @@ async function callAnthropic(
   };
 }
 
-async function callOpenAICompatible(
-  baseUrl: string,
-  apiKey: string,
-  model: string,
-  messages: Array<{ role: string; content: string }>,
-  temperature: number,
-  max_tokens: number
-) {
-  const url = baseUrl.endsWith('/v1') ? baseUrl : `${baseUrl}/v1`;
 
-  const response = await axios.post(
-    `${url}/chat/completions`,
-    {
-      model,
-      messages,
-      temperature,
-      max_tokens
-    },
-    {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      timeout: 30000
-    }
-  );
-
-  return {
-    provider: 'openai-compatible',
-    model: response.data.model,
-    content: response.data.choices[0]?.message?.content,
-    usage: response.data.usage
-  };
-}

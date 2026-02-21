@@ -48,6 +48,22 @@
         </li>
       </ul>
     </div>
+
+    <div class="card-footer">
+      <button
+        v-if="skill?.source_content"
+        class="download-btn"
+        @click="downloadMarkdown"
+        title="Download original SKILL.md"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Download SKILL.md
+      </button>
+    </div>
   </div>
 </template>
 
@@ -72,6 +88,20 @@ function formatCategory(category: string): string {
     .split('_')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
+}
+
+function downloadMarkdown() {
+  if (!props.skill?.source_content) return;
+
+  const blob = new Blob([props.skill.source_content], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${props.skill.id || 'skill'}.md`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 </script>
 
@@ -217,5 +247,36 @@ function formatCategory(category: string): string {
   border-radius: 0.25rem;
   font-size: 0.75rem;
   color: #6b7280;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.download-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.download-btn:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.download-btn svg {
+  flex-shrink: 0;
 }
 </style>

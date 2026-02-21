@@ -1,4 +1,9 @@
 import { Client } from 'pg';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+
+// Load .env file from project root (2 levels up from netlify/functions/)
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 let client: Client | null = null;
 let isConnected = false;
@@ -48,9 +53,23 @@ export async function initDb() {
       algorithm_name VARCHAR(255),
       complexity VARCHAR(50),
       metadata JSONB,
+      source_content TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
+  `);
+
+  // Add source_content column if it doesn't exist (for existing tables)
+  await db.query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'skills' AND column_name = 'source_content'
+      ) THEN
+        ALTER TABLE skills ADD COLUMN source_content TEXT;
+      END IF;
+    END $$;
   `);
 
   // Create index for full-text search

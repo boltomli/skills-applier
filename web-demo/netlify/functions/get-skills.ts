@@ -30,11 +30,11 @@ export const handler: Handler = async (event, context) => {
     }
 
     const result = await db.query(`
-      SELECT 
-        id, name, description, category, type_group, tags, 
+      SELECT
+        id, name, description, category, type_group, tags,
         use_cases, dependencies, input_data_types, output_format,
-        statistical_concept, algorithm_name, complexity, metadata
-      FROM skills 
+        statistical_concept, algorithm_name, complexity, metadata, source_content
+      FROM skills
       ORDER BY name ASC
     `);
 

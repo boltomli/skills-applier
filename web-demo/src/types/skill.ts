@@ -13,6 +13,7 @@ export interface Skill {
   algorithm_name?: string;
   complexity?: string;
   metadata?: Record<string, any>;
+  source_content?: string;
 }
 
 export interface SkillRecommendation {
@@ -25,7 +26,7 @@ export interface SkillRecommendation {
 }
 
 export interface LLMConfig {
-  provider: 'openai' | 'anthropic' | 'openai-compatible';
+  provider: 'openai' | 'anthropic';
   apiKey: string;
   baseUrl?: string;
   model: string;

@@ -5,8 +5,7 @@ const STORAGE_KEY = 'llm-config';
 
 const PROVIDER_MODELS: Record<string, string[]> = {
   'openai': ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo'],
-  'anthropic': ['claude-3-5-sonnet-20241022', 'claude-3-haiku-20240307'],
-  'openai-compatible': [''] // User provides model name
+  'anthropic': ['claude-3-5-sonnet-20241022', 'claude-3-haiku-20240307']
 };
 
 export function useLLMConfig() {
@@ -70,16 +69,15 @@ export function useLLMConfig() {
   }
 
   function updateProvider(provider: string) {
-    config.value.provider = provider as 'openai' | 'anthropic' | 'openai-compatible';
+    config.value.provider = provider as 'openai' | 'anthropic';
     const models = getAvailableModels(provider);
     if (models.length > 0 && models[0]) {
       config.value.model = models[0];
     } else {
       config.value.model = '';
     }
-    if (provider !== 'openai-compatible') {
-      config.value.baseUrl = '';
-    }
+    // Note: We no longer clear baseUrl when switching providers
+    // This allows users to keep a custom endpoint if they want
   }
 
   // Load on initialization

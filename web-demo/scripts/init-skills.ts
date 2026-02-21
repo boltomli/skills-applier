@@ -4,10 +4,14 @@
  * This runs during Netlify build to populate the database
  */
 
+import * as dotenv from 'dotenv';
 import { Client } from 'pg';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
+
+// Load .env file from project root
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 interface SkillMetadata {
   name: string;
@@ -59,9 +63,23 @@ async function initSkills() {
         algorithm_name VARCHAR(255),
         complexity VARCHAR(50),
         metadata JSONB,
+        source_content TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
+    `);
+
+    // Add source_content column if it doesn't exist (for existing tables)
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'skills' AND column_name = 'source_content'
+        ) THEN
+          ALTER TABLE skills ADD COLUMN source_content TEXT;
+        END IF;
+      END $$;
     `);
 
     // Create search index
@@ -157,7 +175,8 @@ function parseSkillMarkdown(content: string, skillId: string, category: string):
         license: metadata.license,
         compatibility: metadata.compatibility,
         sourceFile: 'SKILL.md'
-      }
+      },
+      source_content: content
     };
   } catch (err) {
     console.error(`❌ Failed to parse YAML in ${skillId}/SKILL.md:`, err);
@@ -170,8 +189,8 @@ async function insertOrUpdateSkill(client: Client, skill: any) {
     INSERT INTO skills (
       id, name, description, category, type_group, tags,
       use_cases, dependencies, input_data_types, output_format,
-      statistical_concept, algorithm_name, complexity, metadata
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+      statistical_concept, algorithm_name, complexity, metadata, source_content
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
     ON CONFLICT (id) DO UPDATE SET
       name = EXCLUDED.name,
       description = EXCLUDED.description,
@@ -179,6 +198,7 @@ async function insertOrUpdateSkill(client: Client, skill: any) {
       type_group = EXCLUDED.type_group,
       tags = EXCLUDED.tags,
       metadata = EXCLUDED.metadata,
+      source_content = EXCLUDED.source_content,
       updated_at = CURRENT_TIMESTAMP
   `, [
     skill.id,
@@ -194,7 +214,8 @@ async function insertOrUpdateSkill(client: Client, skill: any) {
     skill.statistical_concept,
     skill.algorithm_name,
     skill.complexity,
-    JSON.stringify(skill.metadata)
+    JSON.stringify(skill.metadata),
+    skill.source_content
   ]);
 }
 

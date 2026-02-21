@@ -85,6 +85,7 @@ export const handler: Handler = async (event, context) => {
             const parsed = parseSkillMarkdown(content, entry.name);
             
             if (parsed) {
+              parsed.source_content = content;
               await insertOrUpdateSkill(db, parsed);
               skillsLoaded.push(parsed.name);
             }
@@ -165,8 +166,8 @@ async function insertOrUpdateSkill(db: any, skill: any) {
     INSERT INTO skills (
       id, name, description, category, type_group, tags,
       use_cases, dependencies, input_data_types, output_format,
-      statistical_concept, algorithm_name, complexity, metadata
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+      statistical_concept, algorithm_name, complexity, metadata, source_content
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
     ON CONFLICT (id) DO UPDATE SET
       name = EXCLUDED.name,
       description = EXCLUDED.description,
@@ -181,6 +182,7 @@ async function insertOrUpdateSkill(db: any, skill: any) {
       algorithm_name = EXCLUDED.algorithm_name,
       complexity = EXCLUDED.complexity,
       metadata = EXCLUDED.metadata,
+      source_content = EXCLUDED.source_content,
       updated_at = CURRENT_TIMESTAMP
   `, [
     skill.id,
@@ -196,6 +198,7 @@ async function insertOrUpdateSkill(db: any, skill: any) {
     skill.statistical_concept,
     skill.algorithm_name,
     skill.complexity,
-    JSON.stringify(skill.metadata)
+    JSON.stringify(skill.metadata),
+    skill.source_content
   ]);
 }
