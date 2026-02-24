@@ -16,13 +16,27 @@ export function useRecommendation() {
   });
 
   async function fetchSkills(): Promise<Skill[]> {
-    try {
-      const response = await axios.get(`${API_BASE}/get-skills`);
-      return response.data.skills || [];
-    } catch (err) {
-      console.error('Failed to fetch skills:', err);
-      return [];
+    const allSkills: Skill[] = [];
+    let page = 1;
+    const limit = 500;
+    let hasMore = true;
+
+    while (hasMore) {
+      try {
+        const response = await axios.get(`${API_BASE}/get-skills?page=${page}&limit=${limit}&exclude_source=true`);
+        const skills = response.data.skills || [];
+        allSkills.push(...skills);
+
+        const pagination = response.data.pagination;
+        hasMore = pagination?.has_next || false;
+        page++;
+      } catch (err) {
+        console.error(`Failed to fetch skills page ${page}:`, err);
+        break;
+      }
     }
+
+    return allSkills;
   }
 
   function buildSystemPrompt(skills: Skill[]): string {

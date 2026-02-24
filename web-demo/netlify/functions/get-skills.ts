@@ -1,6 +1,9 @@
 import type { Handler } from '@netlify/functions';
 import { getDbClient, isDbConnected, setDbConnected } from './db';
 
+const DEFAULT_PAGE_SIZE = 100;
+const MAX_PAGE_SIZE = 500;
+
 export const handler: Handler = async (event, context) => {
   // Enable CORS
   const headers = {
@@ -29,17 +32,70 @@ export const handler: Handler = async (event, context) => {
       setDbConnected(true);
     }
 
+    // Parse query parameters
+    const params = event.queryStringParameters || {};
+    const page = parseInt(params.page || '1', 10);
+    const limit = Math.min(parseInt(params.limit || String(DEFAULT_PAGE_SIZE), 10), MAX_PAGE_SIZE);
+    const excludeSource = params.exclude_source !== 'false'; // Default to true
+    const statsOnly = params.stats_only === 'true';
+    const offset = (page - 1) * limit;
+
+    // If stats_only is true, return only statistics without skills data
+    if (statsOnly) {
+      const countResult = await db.query('SELECT COUNT(*) as total FROM skills');
+      const categoryResult = await db.query(`
+        SELECT category, COUNT(*) as count
+        FROM skills
+        GROUP BY category
+      `);
+      const typeGroupResult = await db.query(`
+        SELECT type_group, COUNT(*) as count
+        FROM skills
+        GROUP BY type_group
+      `);
+
+      const categories: Record<string, number> = {};
+      categoryResult.rows.forEach(row => {
+        categories[row.category || 'Uncategorized'] = parseInt(row.count, 10);
+      });
+
+      const typeGroups: Record<string, number> = {};
+      typeGroupResult.rows.forEach(row => {
+        typeGroups[row.type_group || 'unknown'] = parseInt(row.count, 10);
+      });
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          total: parseInt(countResult.rows[0].total, 10),
+          categories,
+          type_groups: typeGroups,
+          page_size: limit
+        })
+      };
+    }
+
+    // Build SELECT columns based on excludeSource flag
+    const selectColumns = excludeSource
+      ? `id, name, description, category, type_group, tags,
+         use_cases, dependencies, input_data_types, output_format,
+         statistical_concept, algorithm_name, complexity, metadata`
+      : `id, name, description, category, type_group, tags,
+         use_cases, dependencies, input_data_types, output_format,
+         statistical_concept, algorithm_name, complexity, metadata, source_content`;
+
+    // Get total count
+    const countResult = await db.query('SELECT COUNT(*) as total FROM skills');
+    const total = parseInt(countResult.rows[0].total, 10);
+
+    // Get paginated skills
     const result = await db.query(`
-      SELECT
-        id, name, description, category, type_group, tags,
-        use_cases, dependencies, input_data_types, output_format,
-        statistical_concept, algorithm_name, complexity, metadata, source_content
+      SELECT ${selectColumns}
       FROM skills
       ORDER BY name ASC
-    `);
-
-    // Don't close the connection in serverless environment
-    // Let it persist for reuse across warm invocations
+      LIMIT $1 OFFSET $2
+    `, [limit, offset]);
 
     const skills = result.rows.map(row => ({
       ...row,
@@ -49,16 +105,22 @@ export const handler: Handler = async (event, context) => {
       input_data_types: row.input_data_types || []
     }));
 
+    // Calculate total pages
+    const totalPages = Math.ceil(total / limit);
+
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         skills,
-        total: skills.length,
-        categories: skills.reduce((acc: Record<string, number>, skill: any) => {
-          acc[skill.category] = (acc[skill.category] || 0) + 1;
-          return acc;
-        }, {})
+        pagination: {
+          page,
+          limit,
+          total,
+          total_pages: totalPages,
+          has_next: page < totalPages,
+          has_prev: page > 1
+        }
       })
     };
   } catch (error) {

@@ -113,14 +113,14 @@ const {
   clearRecommendations
 } = useRecommendation();
 
-const { skillCount, categoryStats, loading: skillStatsLoading, fetchSkills } = useSkillStats();
+const { skillCount, categoryStats, loading: skillStatsLoading, fetchStats } = useSkillStats();
 
 const hasSearched = ref(false);
 const lastQuery = ref('');
 const isConfigExpanded = ref(false);
 
 onMounted(() => {
-  fetchSkills();
+  fetchStats();
 });
 
 async function handleSubmit(problem: string) {
