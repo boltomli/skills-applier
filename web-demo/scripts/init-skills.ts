@@ -84,9 +84,20 @@ async function initSkills() {
 
     // Create search index
     await client.query(`
-      CREATE INDEX IF NOT EXISTS idx_skills_search ON skills 
+      CREATE INDEX IF NOT EXISTS idx_skills_search ON skills
       USING gin(to_tsvector('english', name || ' ' || COALESCE(description, '')))
     `);
+
+    // Migrate old id format to new format (category/id)
+    const migrateResult = await client.query(`
+      UPDATE skills
+      SET id = category || '/' || id
+      WHERE id NOT LIKE '%/%' AND category IS NOT NULL
+      RETURNING id
+    `);
+    if (migrateResult.rowCount && migrateResult.rowCount > 0) {
+      console.log(`🔧 Migrated ${migrateResult.rowCount} skill IDs to new format (category/id)`);
+    }
 
     // Resolve skill path
     const resolvedPath = path.isAbsolute(skillBasePath)
@@ -102,7 +113,17 @@ async function initSkills() {
     // Read and parse skills
     const categoryEntries = fs.readdirSync(resolvedPath, { withFileTypes: true });
     let loaded = 0;
+    let skipped = 0;
     let errors = 0;
+
+    // Fetch existing skills from database (by id, which is the primary key)
+    const existingSkillsResult = await client.query<{ id: string }>(
+      'SELECT id FROM skills'
+    );
+    const existingSkills = new Set(
+      existingSkillsResult.rows.map(row => row.id)
+    );
+    console.log(`📋 Found ${existingSkills.size} existing skills in database`);
 
     for (const categoryEntry of categoryEntries) {
       if (categoryEntry.isDirectory()) {
@@ -120,9 +141,15 @@ async function initSkills() {
                 const skill = parseSkillMarkdown(content, entry.name, category);
 
                 if (skill) {
-                  await insertOrUpdateSkill(client, skill);
-                  console.log(`  ✅ [${category}] ${skill.name}`);
-                  loaded++;
+                  // Check if skill already exists (by id, which is the primary key)
+                  if (existingSkills.has(skill.id)) {
+                    console.log(`  ⏭️ [${category}] ${skill.name} (skipped, already exists)`);
+                    skipped++;
+                  } else {
+                    await insertSkill(client, skill);
+                    console.log(`  ✅ [${category}] ${skill.name}`);
+                    loaded++;
+                  }
                 }
               } catch (err) {
                 console.error(`  ❌ [${category}] ${entry.name}: ${err instanceof Error ? err.message : 'Unknown error'}`);
@@ -134,7 +161,7 @@ async function initSkills() {
       }
     }
 
-    console.log(`\n📊 Summary: ${loaded} skills loaded, ${errors} errors`);
+    console.log(`\n📊 Summary: ${loaded} skills loaded, ${skipped} skipped, ${errors} errors`);
 
   } catch (error) {
     console.error('❌ Database error:', error);
@@ -154,10 +181,88 @@ function parseSkillMarkdown(content: string, skillId: string, category: string):
   }
 
   try {
-    const metadata = yaml.load(frontmatterMatch[1]) as SkillMetadata;
+    // Pre-process YAML to fix multi-line block scalars that may contain list-like content
+    // The issue: |- or >- followed by indented lines starting with '-' are parsed as new documents
+    // Solution: Convert block scalars to quoted single-line strings
+    let yamlContent = frontmatterMatch[1];
+
+    // Fix description field with block scalar format (|- or >-)
+    // The issue: block scalar content may contain lines starting with '-' which YAML
+    // interprets incorrectly. Solution: convert to quoted single-line string.
+    // Use line-by-line parsing to handle all cases correctly.
+    const yamlLines = yamlContent.split('\n');
+    const fixedLines: string[] = [];
+    let inBlockScalar = false;
+    let blockContent: string[] = [];
+
+    for (const line of yamlLines) {
+      // Check if this is a description with block scalar
+      if (line.match(/^description:\s*[|>][-]?$/)) {
+        inBlockScalar = true;
+        blockContent = [];
+        continue;
+      }
+
+      if (inBlockScalar) {
+        // Check if this is a new top-level key (starts with a word followed by colon, not indented)
+        if (line.match(/^\w+:/)) {
+          // End of block scalar, convert to quoted string
+          const singleLine = blockContent
+            .map(l => l.trim())
+            .filter(l => l.length > 0)
+            .join(' ')
+            .replace(/"/g, '\\"');
+          fixedLines.push(`description: "${singleLine}"`);
+          fixedLines.push(line);
+          inBlockScalar = false;
+          blockContent = [];
+        } else {
+          blockContent.push(line);
+        }
+      } else {
+        fixedLines.push(line);
+      }
+    }
+
+    // Handle case where block scalar ends at end of file
+    if (inBlockScalar && blockContent.length > 0) {
+      const singleLine = blockContent
+        .map(l => l.trim())
+        .filter(l => l.length > 0)
+        .join(' ')
+        .replace(/"/g, '\\"');
+      fixedLines.push(`description: "${singleLine}"`);
+    }
+
+    yamlContent = fixedLines.join('\n');
+
+    // Fix single-line description that contains colons (which YAML interprets as new key-value pairs)
+    // Match: description: <value with colon but not quoted>
+    yamlContent = yamlContent.replace(
+      /^description:\s*(.+)$/gm,
+      (match, value) => {
+        const trimmed = value.trim();
+        // Already quoted - skip
+        if ((trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+            (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+          return match;
+        }
+        // Contains colon - needs quoting
+        if (trimmed.includes(':')) {
+          const escaped = trimmed.replace(/"/g, '\\"');
+          return `description: "${escaped}"`;
+        }
+        return match;
+      }
+    );
+
+    const metadata = yaml.load(yamlContent) as SkillMetadata;
+
+    // Generate unique id combining category and skillId to avoid conflicts
+    const uniqueId = `${category}/${skillId}`;
 
     return {
-      id: skillId,
+      id: uniqueId,
       name: metadata.name || skillId,
       description: metadata.description || '',
       category: category,
@@ -184,22 +289,13 @@ function parseSkillMarkdown(content: string, skillId: string, category: string):
   }
 }
 
-async function insertOrUpdateSkill(client: Client, skill: any) {
+async function insertSkill(client: Client, skill: any) {
   await client.query(`
     INSERT INTO skills (
       id, name, description, category, type_group, tags,
       use_cases, dependencies, input_data_types, output_format,
       statistical_concept, algorithm_name, complexity, metadata, source_content
     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-    ON CONFLICT (id) DO UPDATE SET
-      name = EXCLUDED.name,
-      description = EXCLUDED.description,
-      category = EXCLUDED.category,
-      type_group = EXCLUDED.type_group,
-      tags = EXCLUDED.tags,
-      metadata = EXCLUDED.metadata,
-      source_content = EXCLUDED.source_content,
-      updated_at = CURRENT_TIMESTAMP
   `, [
     skill.id,
     skill.name,
@@ -220,7 +316,7 @@ async function insertOrUpdateSkill(client: Client, skill: any) {
 }
 
 // Run if called directly (support Windows and Unix)
-const isMainModule = import.meta.url === `file://${process.argv[1]}` || 
+const isMainModule = import.meta.url === `file://${process.argv[1]}` ||
                      import.meta.url === `file:///${process.argv[1].replace(/\\/g, '/')}` ||
                      process.argv[1].endsWith('init-skills.ts');
 
